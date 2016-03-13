@@ -1,0 +1,22 @@
+extends layout
+
+block content
+	#queryForm
+		#error.alert.alert-danger.fade.in
+		#top
+			p Please enter the number of check ins and username of person to search for below
+		#bottom
+			form
+				.form-group
+					label Username to Search
+					input.form-control(name='name', type='text')
+				.form-group
+					label # of check ins to retrieve
+					input.form-control(name='number', type='text')
+				input#query-button.btn.btn-info(name='submit', type='submit', value='Search')
+	#map
+	script(src='/javascripts/jquery.min.js')
+	script(src='/javascripts/bootstrap.min.js')
+	script(src='/javascripts/mapscript.js')
+	script(src='/javascripts/history.js')
+	script(async defer src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY + "&callback=initMap")

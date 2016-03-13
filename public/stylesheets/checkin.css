@@ -1,0 +1,59 @@
+html, body {
+	height: 100%;
+	width: 100%;
+}
+
+body {
+	padding-top: 55px;
+}
+
+.text-center {
+	text-align: center;
+}
+.form-group {
+	margin-bottom: 5px;
+}
+
+#map {
+	height: 60%;
+	border-radius: 10px;
+}
+
+.full-screen {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	z-index: 100000;
+}
+
+#success {
+	display: none;
+}
+
+#topArea {
+	height: 40%;
+	min-height: 275px;
+}
+
+.navbar-default {
+	background: rgba(0, 0, 0, 0.2);
+}
+
+.navbar-default .navbar-brand {
+	color: black;
+}
+
+.navbar-default .navbar-brand:hover {
+	color: black;
+}
+
+.navbar-default .navbar-nav > li > a {
+    color: white;
+}
+
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus {
+    color: white;
+    background-color: rgba(0,0,0,0.2);
+}

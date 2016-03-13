@@ -1,0 +1,40 @@
+doctype html
+html
+	head
+		meta(charset='utf-8')
+		meta(http-equiv='X-UA-Compatible', content='IE=edge')
+		meta(name='viewport', content='width=device-width, initial-scale=1')
+		title= "Check In Admin Portal"
+		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+		link(rel='stylesheet', href='/stylesheets/common.css')
+		link(rel='stylesheet', href='/stylesheets/login_common.css')
+		link(rel='stylesheet', href='/stylesheets/admin_login.css')
+	body
+		nav.navbar.navbar-default.navbar-fixed-top
+			.container
+				.navbar-header
+					button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#navbar', aria-expanded='false', aria-controls='navbar')
+						span.sr-only Toggle navigation
+						span.icon-bar
+						span.icon-bar
+						span.icon-bar
+					.navbar-brand Check In Admin Portal
+				#navbar.collapse.navbar-collapse
+					ul.nav.navbar-nav.navbar-right
+						li
+							a(href='/users/login') Looking for User Check Ins?
+		#loginWindow
+			#top
+				p Please log in to continue
+			#bottom
+				form(method='post', action='/admins/login', enctype='multipart/formdata')
+					.form-group
+						label username
+						input.form-control(name='username', type='text')
+					.form-group
+						label password
+						input.form-control(name='password', type='password')
+					input.btn.btn-danger.btn-block(name='submit', type='submit', value='Login')
+	script(src='/javascripts/jquery.min.js')
+	script(src='/javascripts/bootstrap.min.js')
+	

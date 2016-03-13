@@ -1,0 +1,39 @@
+body {
+	background-size: cover;
+}
+
+#loginWindow {
+	color: #f5f5f5;
+	border-radius: 10px;
+	height: 40%;
+	width: 40%;
+	padding: 10px;
+	margin: auto;
+	margin-top: 15%;
+	min-height: 270px;
+	min-width: 250px;
+}
+
+#top {
+	height: 25%;
+	width: 100%;
+	border-radius: 10px;
+}
+
+#top p {
+	text-align: center;
+	padding-top: 20px;
+	font-size: 1.4em;
+}
+
+#bottom {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	height: 75%;
+	width: 100%;
+}
+
+.btn-block {
+	max-width: 250px;
+	margin: auto;
+}

@@ -1,0 +1,40 @@
+doctype html
+html
+	head
+		meta(charset='utf-8')
+		meta(http-equiv='X-UA-Compatible', content='IE=edge')
+		meta(name='viewport', content='width=device-width, initial-scale=1')
+		title= "Check Ins"
+		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+		link(rel='stylesheet', href='/stylesheets/common.css')
+		link(rel='stylesheet', href='/stylesheets/style-panels.css')
+	body
+		nav.navbar.navbar-default.navbar-fixed-top
+			.container
+				.navbar-header
+					button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#navbar', aria-expanded='false', aria-controls='navbar')
+						span.sr-only Toggle navigation
+						span.icon-bar
+						span.icon-bar
+						span.icon-bar
+					if user.account_type === 'admin'
+						.settings
+							.glyphicon.glyphicon-cog
+								a(href='/app/settings')
+					.navbar-brand= "Logged in as " + user.username
+				#navbar.collapse.navbar-collapse
+					ul.nav.navbar-nav
+						li(class=(title == 'Main' ? 'active' : ''))
+							a(href='/app') Check Ins
+						li(class=(title == 'History' ? 'active' : ''))
+							a(href='/app/history') History
+						if user
+							li
+								a(href='/admins/logout') Log Out
+					ul.nav.navbar-nav.navbar-right
+						block time
+	script(src='/javascripts/moment.js')
+	script(src='/javascripts/moment-timezone-data-2020.js')
+	block content
+	if title == 'Main'
+		script(src='/javascripts/refresh.js')

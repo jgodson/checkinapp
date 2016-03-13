@@ -1,0 +1,37 @@
+html {
+	height: 100%;
+}
+
+body {
+	height: 100%;
+	width: 100%;
+ 	font: 14px "Lato", sans-serif;
+}
+
+.navbar-default {
+	background: rgba(0, 0, 0, 0.6);
+}
+
+.navbar-default .navbar-brand {
+	color: white;
+}
+
+.navbar-default .navbar-brand:hover {
+	color: white;
+}
+
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.3)
+}
+
+.navbar-default .navbar-nav > li > a {
+	color: white;
+}
+
+.navbar-default .navbar-nav > li > a:hover {
+	color: white;
+	background-color: rgba(0, 0, 0, 0.3)
+}

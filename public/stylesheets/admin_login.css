@@ -1,0 +1,11 @@
+body {
+	background-image: url("/images/admin-bg.jpg");
+}
+
+#loginWindow {
+	background-color: rgba(100, 100, 100, 0.6);
+}
+
+#top {
+		background-color: rgba(200, 0, 0, 0.4);
+}
