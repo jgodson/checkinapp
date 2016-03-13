@@ -159,9 +159,8 @@ router.post('/history', hasPermissions, function(req, res, next) {
 	var name = req.body.name.toLowerCase();
 	var timezone = req.body.tz;
 	var num = parseInt(req.body.num);
-	console.log(name + " " + num + " " + res.locals.user.username);
 	getCheckInLatLng(name, DEFAULT_ICON, num, timezone, res.locals.user.username, function(err, results) {
-		if (err) {return res.status(500).send();}
+		if (err) { return res.status(500).send(); }
 		var coordinates = {};
 		coordinates[name] = results;
 		res.writeHead(200,"OK",{"Content-Type":"application/json"});

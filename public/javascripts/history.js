@@ -2,10 +2,10 @@ function query() {
 	var $err = $('#error');
 	var $btn = $('#query-button');
 	$btn.prop('disabled', true);
-	var name = $("input[name='name']").val();
-	var num = $("input[name='number']").val();
+	var name = $("input[name='name']").val().trim().toLowerCase();
+	var num = $("input[name='number']").val().trim();
 	if (name.toLowerCase().trim() !== "") { 
-		if (num != '' && num > 0) {
+		if (num != '' && num != '0') {
 			if (num <= 100) {
 				$err.fadeOut();
 				var req = new XMLHttpRequest();
@@ -13,10 +13,18 @@ function query() {
 				req.setRequestHeader("Content-type", "application/json");
 				req.onreadystatechange = function(){
 					if(req.readyState == 4){
+						console.log(JSON.parse(req.responseText));
+						var results = JSON.parse(req.responseText);
+						console.log(results[name].length);
 						if (req.status === 200) {
-							deleteMarkers();
-							addMarkers(JSON.parse(req.responseText), true);
-							$btn.prop('disabled', false);
+							if (results[name].length !== 0) {
+								deleteMarkers();
+								addMarkers(results, true);
+								$btn.prop('disabled', false);
+							}
+							else {
+								displayError('No results received.', $err, $btn);
+							}
 						}
 						else {
 							displayError('Server Error', $err, $btn);
@@ -30,7 +38,7 @@ function query() {
 			}
 		}
 		else {
-			displayError("Please enter a number into the # of check ins field", $err, $btn);
+			displayError("Please enter a number of 1 or more into the # of check ins field", $err, $btn);
 		}
 	}
 	else {

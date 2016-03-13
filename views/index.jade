@@ -1,6 +1,10 @@
 extends layout
 
 block content
+	#notify
+		p= "Refresh in "
+			span 60 seconds
+		input.btn.btn-danger(name='cancel', value='Cancel', type='button')
 	#techList
 		p= "Loading..."
 	#map

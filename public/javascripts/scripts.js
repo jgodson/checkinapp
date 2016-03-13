@@ -15,14 +15,14 @@ function showLocation (loc, date) {
 		$accuracy.value = loc.coords.accuracy + " meters";
 	}
 	else {
-		$warning.innerHTML = "Oops somethign went wrong. Try refreshing the page.";
+		$warning.innerHTML = "Oops something went wrong. Try refreshing the page.";
 		$warning.style.display = "fixed";
 	}
 }
 
 function submitCheckIn () {
 	if ($message.value.trim() === "") {
-		$warning.innerHTML = "Name and/or message input fields cannot be blank.";
+		$warning.innerHTML = "Please enter a message for the check in.";
 		$('#warning').fadeIn();
 		setTimeout( function () {
 			$('#warning').fadeOut();

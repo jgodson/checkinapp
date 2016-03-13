@@ -1,4 +1,6 @@
-var updates = 10 // in minutes
+var updates = 3// in minutes
+var timer;
+var countdown;
 
 function updateTime(){
 	var req = new XMLHttpRequest();
@@ -34,14 +36,42 @@ function updateMap() {
 	req.send();
 }
 
+function refresh() {
+	var $countdown = $('#notify p span');
+	timer = setTimeout(function () {
+		updateTechs();
+		updateMap();
+		updateTime();
+	}, 60000);
+	$('#notify').fadeIn();
+	var seconds = 60;
+	countdown = setInterval(function () {
+		$countdown.text(seconds + " seconds");
+		seconds--;
+		if (seconds === 0) {
+			$countdown.text("60 seconds");
+			clearInterval(countdown);
+			$('#notify').fadeOut();
+		}
+	}, 1000);
+}
+
 window.onload = function () {
 	updateTechs();
 	updateTime();
 	updateMap();
-	setInterval(function() {updateTechs(); updateTime(); updateMap();}, (updates * 60000));
+	setInterval(function () {
+		refresh();
+	}, (updates - 1) * 60000);
 }
 
 $(document).ready(function() {
+	$(document).on('click', 'input[name=cancel]', function() {
+		clearTimeout(timer);
+		clearInterval(countdown);
+		$('#notify').fadeOut();
+		$('#notify p span').text('60 seconds');
+	});
 	
 	$('.glyphicon-cog').click(function () {
 		alert('Settings coming soon!');
