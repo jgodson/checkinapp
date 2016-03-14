@@ -37,6 +37,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
 	cookie: {
 		secure: secureCookie,
+		secureProxy: secureCookie,
 		maxAge: 7 * 24 * 60 * 60 // 7 days to match session storage
 	},
 	store: new MongoStore({
