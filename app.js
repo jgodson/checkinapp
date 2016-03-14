@@ -6,6 +6,7 @@ if (!process.env.MONGO_URI) {
 	secureCookie = false;
 };
 
+console.log(secureCookie);
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -22,7 +23,7 @@ var publicRoute = require('./routes/public');
 
 var app = express();
 app.disable('x-powered-by');
-
+app.set('trust proxy', 1);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -36,8 +37,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
 	cookie: {
+		name: 'checkinapp.sid',
 		secure: secureCookie,
-		secureProxy: secureCookie,
 		maxAge: 7 * 24 * 60 * 60 // 7 days to match session storage
 	},
 	store: new MongoStore({
