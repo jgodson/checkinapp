@@ -2,9 +2,11 @@
 var secureCookie = true;
 var COOKIE_SESSION_TTL = (7 * 24 * 60 * 60 * 1000); // 7 days
 var SESS_STORE_TOUCH_TIME = (24 * 60 * 60 * 1000) // 24 hours
+
+// If no env variables, include file for development.
 if (!process.env.MONGO_URI) {
 	require('./env.js');
-	// Cookie not secure in dev
+	// Cookie not secure in dev.
 	secureCookie = false;
 };
 
@@ -23,8 +25,13 @@ var admins = require('./routes/admins');
 var publicRoute = require('./routes/public');
 
 var app = express();
+
+// Remove the powered by express header
 app.disable('x-powered-by');
+
+// Alow proxy for https on production 
 app.set('trust proxy', 1);
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -50,18 +57,19 @@ app.use(session({
 	secret: process.env.SESSION_SECRET,
 	resave: false,
 	saveUninitialized: false,
-	unset: 'destroy'
+	unset: 'destroy' // Destory session in mongo store on log out.
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-
+// Make user available to all routes
 app.all('*', function(req, res, next){
 	res.locals.user = req.user || null;
 	next();
 });
 
+// Set up routes
 app.use('/', publicRoute);
 app.use('/app', routes);
 app.use('/admins', admins);
@@ -75,7 +83,6 @@ app.use(function(req, res, next) {
 });
 
 // error handlers
-
 // development error handler
 // will print stacktrace
 if (app.get('env') === 'development') {

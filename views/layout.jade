@@ -38,6 +38,13 @@ html
 						block time
 	script(src='/javascripts/moment.js')
 	script(src='/javascripts/moment-timezone-data-2020.js')
+	script(src='/javascripts/jquery.min.js')
+	script(src='/javascripts/bootstrap.min.js')
 	block content
-	if title == 'Main'
+	if title === 'Main' || title === 'History'
+		script(src='/javascripts/mapscript.js')
+	if title === 'Main'
 		script(src='/javascripts/refresh.js')
+	if title === 'History'
+		script(src='/javascripts/history.js')
+		

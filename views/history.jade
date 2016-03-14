@@ -15,8 +15,4 @@ block content
 					input.form-control(name='number', type='text')
 				input#query-button.btn.btn-info(name='submit', type='submit', value='Search')
 	#map
-	script(src='/javascripts/jquery.min.js')
-	script(src='/javascripts/bootstrap.min.js')
-	script(src='/javascripts/mapscript.js')
-	script(src='/javascripts/history.js')
 	script(async defer src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY + "&callback=initMap")
