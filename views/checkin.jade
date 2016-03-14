@@ -56,6 +56,10 @@ html
 						.input-group
 							span.input-group-addon
 								i.glyphicon.glyphicon-comment
+							select#type.form-control(name="type")
+								option(value='Check In') Check In
+								option(value='Start') Start
+								option(value='End') End
 							input#message.form-control(type='text', placeholder='Message')
 					.form-group
 						input#submit-checkin.btn.btn-success.btn-block(type='submit', value='Check In', disabled='disabled')

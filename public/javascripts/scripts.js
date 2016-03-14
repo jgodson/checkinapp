@@ -2,6 +2,7 @@ var $lat = document.getElementById('lat');
 var $lng = document.getElementById('lng');
 var $time = document.getElementById('time');
 var $message = document.getElementById('message');
+var $checkin = document.getElementById('type');
 var $accuracy = document.getElementById('accuracy');
 var $warning = document.getElementById('warning');
 var $checkinBtn = document.getElementById('submit-checkin');
@@ -31,15 +32,17 @@ function submitCheckIn () {
 	}
 	$checkinBtn.setAttribute('disabled', 'disabled');
 	var checkin = {
-		timestamp: moment($time.value, "ddd, MMM Do YYYY, h:mm:ss a").utc().toString(),
+		timestamp: moment($time.value, "ddd, MMM Do YYYY, h:mm:ss a").utc()
+			.toString().replace(/[<()>"']/g, '*'),
 		location: {
 			lat: parseFloat($lat.value), 
 			lng: parseFloat($lng.value)
 		},
 		accuracy: parseInt($accuracy.value.split(' ')[0]),
+		type: document.getElementById('type').value.replace(/[<()>"']/g, '*'),
 		message: $message.value.trim().replace(/[<()>"']/g, '*')
 	}
-	
+	console.log(checkin);
 	var req = new XMLHttpRequest();
 	req.open("POST","/app/checkin", true);
 	req.setRequestHeader("Content-type", "application/json");
@@ -55,6 +58,14 @@ function submitCheckIn () {
 				$time.value = "";
 				$accuracy.value = "";
 				$message.value = "";
+			}
+			else if (req.status === 400) {
+				$warning.innerHTML = "Invalid input. Please refresh page and try again";
+				$('#warning').fadeIn();
+				$checkinBtn.removeAttribute('disabled');
+				setTimeout( function () {
+					$('#warning').fadeOut();
+				}, 4000);
 			}
 			else {
 				$warning.innerHTML = "Server error, please try again.";

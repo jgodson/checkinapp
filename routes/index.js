@@ -107,21 +107,32 @@ router.get('/checkin', isUser, function (req, res, next) {
 
 router.post('/checkin', isUser, function (req, res, next) {
 	var checkin = req.body;
+	// Validate received input
+	if (typeof checkin !== 'object')
+	{
+		return res.status(400).send();
+	}
+	if (typeof checkin.message !== 'string' || typeof checkin.type !== 'string'
+		|| typeof checkin.timestamp !== 'string') {
+		return res.status(400).send();
+	}
+	if (typeof checkin.location.lat !== 'number' || typeof checkin.location.lng !== 'number'
+		|| typeof checkin.accuracy !== 'number') {
+		return res.status(400).send();
+	}
+	if (checkin.type !== "Start" && checkin.type !== "Check In" && checkin.type !== 'End') {
+		return res.status(400).send();
+	}
+	checkin.message = checkin.message.trim().replace(/[<()>"']/g, '*');
+	checkin.timestamp = checkin.timestamp.replace(/[<()>"']/g, '*');
 	checkin.name = res.locals.user.firstName + " " + res.locals.user.lastName
 	checkin.username = res.locals.user.username;
-	checkin.type = "Check In";
-	if (checkin.message.search(/start/i) !== -1) {
-		checkin.type = "Start";
-	}
-	else if (checkin.message.search(/end/i) !== -1) {
-		checkin.type = "End";
-	}
 	checkin.created_At = moment().utc().toString();
 	MongoClient.connect(uri, function(err, db) {
 		if (err) { return res.status(500).send(); }
 		db.collection(res.locals.user.admin + "_checkins").insertOne(checkin, function (err, checkin) {
 			db.close();
-			if (err) { return res.status(500).send(); }
+			if (err) { console.log(err); return res.status(500).send(); }
 			return res.status(200).send();
 		});
 	});
