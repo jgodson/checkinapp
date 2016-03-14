@@ -1,12 +1,13 @@
 // If no MONGO_URI is available from process.env then include file for dev purposes
 var secureCookie = true;
+var COOKIE_SESSION_TTL = (7 * 24 * 60 * 60 * 1000); // 7 days
+var SESS_STORE_TOUCH_TIME = (24 * 60 * 60 * 1000) // 24 hours
 if (!process.env.MONGO_URI) {
 	require('./env.js');
 	// Cookie not secure in dev
 	secureCookie = false;
 };
 
-console.log(secureCookie);
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -39,12 +40,12 @@ app.use(session({
 	cookie: {
 		name: 'checkinapp.sid',
 		secure: secureCookie,
-		maxAge: 7 * 24 * 60 * 60 // 7 days to match session storage
+		maxAge: COOKIE_SESSION_TTL
 	},
 	store: new MongoStore({
 		url: process.env.MONGO_URI,
-		ttl: 7 * 24 * 60 * 60, // 7 days
-		touchAfter: 24 * 60 * 60 // only change every 24 hours
+		ttl: COOKIE_SESSION_TTL,
+		touchAfter: SESS_STORE_TOUCH_TIME
 	}),
 	secret: process.env.SESSION_SECRET,
 	resave: false,
