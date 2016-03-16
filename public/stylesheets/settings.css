@@ -1,0 +1,20 @@
+body {
+	background-color: gainsboro;
+	margin-top: 55px;
+}
+
+#users {
+	width: 100%;
+}
+
+table {
+	width: 100%;
+}
+
+tr {
+	border: 1px solid black;
+}
+
+td {
+	padding: 2px;
+}

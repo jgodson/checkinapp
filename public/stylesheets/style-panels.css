@@ -49,23 +49,6 @@ body {
 	color: red;
 }
 
-.settings {
-    margin-top: 13px;
-    float: left;
-    font-size: 25px;
-    margin-right: 20px;
-    color: darkorange;
-}
-
-.glyphicon-cog {
-	cursor: pointer;
-	transition: transform 500ms;
-}
-
-.glyphicon-cog:hover {
-	transform: rotate(90deg);
-}
-
 .glyphicon-ok {
 	color: lawngreen
 }

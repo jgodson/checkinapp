@@ -10,6 +10,7 @@ html
 		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
 		link(rel='stylesheet', href='/stylesheets/font-awesome.min.css')
 		link(rel='stylesheet', href='/stylesheets/checkin.css')
+		link(rel='icon', sizes='128x128', href='/apple-touch-icon.png')
 	body
 		nav.navbar.navbar-default.navbar-fixed-top
 				.container
@@ -26,7 +27,7 @@ html
 								a(href='/app/checkin') Check Ins
 							if user
 								li
-									a(href='/users/logout') Log Out
+									a(href='/users/logout' target='_self') Log Out
 		#topArea.col-sm-6.col-sm-offset-3.text-center
 			#warning.alert.alert-warning.full-screen
 			#success.alert.alert-success.full-screen Successfully submitted Check In!

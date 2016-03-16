@@ -73,10 +73,6 @@ $(document).ready(function() {
 		$('#notify p span').text('60 seconds');
 	});
 	
-	$('.glyphicon-cog').click(function () {
-		alert('Settings coming soon!');
-	});
-	
 	$(document).on('click', '.panel-title', function() {
 		$(this).parent().parent().find('.panel-body').slideToggle('slow');
 	});

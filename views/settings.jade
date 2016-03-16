@@ -1,3 +1,40 @@
+mixin users(userObj)
+	tr
+		td= userObj.username
+		td= userObj.firstName
+		td= userObj.lastName
+		td= userObj.account_type
+		td
+			button#edit-user.btn.btn-warning.btn-xs(title=userObj.username data-toggle='modal' data-target='#edit-user-modal') Edit User
+			
 extends layout
 
 block content
+	#admin-settings
+		p Admin Settings Coming Soon!
+	#users
+		table
+			caption Users List
+			tr
+				th Username
+				th First Name
+				th Last Name
+				th Account Type
+				th More Info
+			each user in userArray
+				+users(user)
+			tr#newuser
+				td(colspan='5')
+					button#add-user.btn.btn-primary.btn-xs(data-toggle='modal' data-target='#new-user-modal') New User
+	#new-user-modal.modal.fade(tab-index='-1' role='dialog')
+		.modal-dialog(role='document')
+			.modal-content
+				.modal-header
+					button.close(type='button' data-dismiss='modal')
+						span &times;
+					h4.modal-title Add a new user
+				.modal-body
+					
+				.modal-footer
+					button.btn.btn-danger(data-dismiss='modal') Close
+					button.btn.btn-success Add User

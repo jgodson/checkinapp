@@ -30,6 +30,17 @@ function timeFunctions (docTime, currentMoment, timezone) {
 	return [docMoment, timeDiff, timeString];
 }
 
+function getUsersForAdmin (adminName, callback){
+	MongoClient.connect(uri, function (err, db) {
+		if (err) { return callback(err); }
+		db.collection('users').find({admin: adminName}).toArray( function (err, results) {
+			if (err) { return callback(err); }
+			db.close();
+			callback(null, results);
+		});
+	});
+}
+
 function personExists (username, callback) {
 	MongoClient.connect(uri, function (err, db) {
 		if (err) { return callback(err); }
@@ -98,6 +109,18 @@ function isUser (req, res, next) {
 	return res.redirect('/users/login');
 }
 
+function isAdmin (req, res, next) {
+	if (req.isAuthenticated()) {
+		if (res.locals.user.account_type === 'admin') {
+			return next();
+		}
+		else {
+			res.redirect('/users/login');
+		}
+	}
+	return res.redirect('/users/login');
+}
+
 router.get('/checkin', isUser, function (req, res, next) {
 	res.render('checkin', {	
 		title: 'Main', 
@@ -146,8 +169,13 @@ router.get('/', hasPermissions, function(req, res, next) {
 	});
 });
 
-router.get('/settings', hasPermissions, function(req, res, next) {
-	res.render('settings', { title: 'Settings' });
+router.get('/settings', isAdmin, function(req, res, next) {
+	getUsersForAdmin(res.locals.user.username, function(err, results) {
+		res.render('settings', { 
+									title: 'Settings',
+									userArray: results
+		});
+	});
 });
 
 // Return current time formatted
