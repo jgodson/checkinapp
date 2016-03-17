@@ -34,8 +34,8 @@ function getUsersForAdmin (adminName, callback){
 	MongoClient.connect(uri, function (err, db) {
 		if (err) { return callback(err); }
 		db.collection('users').find({admin: adminName}).toArray( function (err, results) {
-			if (err) { return callback(err); }
 			db.close();
+			if (err) { return callback(err); }
 			callback(null, results);
 		});
 	});
@@ -58,8 +58,8 @@ function getDocsFromTech (tech, collection, callback) {
 	MongoClient.connect(uri, function(err, db) {
 		if (err) {return callback(err);}
 		db.collection(collection + "_checkins").find({username: tech}).sort({_id: -1}).limit(1).toArray(function(err, results){
-			if (err) {db.close(); return callback(err);}
 			db.close();
+			if (err) {return callback(err);}
 			callback(null, results[0]);
 		});
 	});
@@ -68,9 +68,10 @@ function getDocsFromTech (tech, collection, callback) {
 // Get just the lat and lng off that last 5 documents from given tech
 function getCheckInLatLng (tech, icon, max, timezone, collection, callback) {
 	MongoClient.connect(uri, function(err, db) {
+		if (err) { return callback(err); }
 		db.collection(collection + "_checkins").find({username: tech}, {_id: 0, name: 1, message: 1, timestamp: 1, location: 1}).sort({_id: -1}).limit(max).toArray(function(err, results){
 			db.close();
-			if (err) {return callback(err);}
+			if (err) { return callback(err); }
 			results.forEach(function(result) {
 				result.timestamp = moment(result.timestamp, 'ddd, MMM Do YYYY, h:mm:ss a Z', 'en');
 				result.timestamp = momentTZ.tz(result.timestamp, timezone).format("ddd, MMM Do YYYY, h:mm:ss a");
@@ -131,8 +132,7 @@ router.get('/checkin', isUser, function (req, res, next) {
 router.post('/checkin', isUser, function (req, res, next) {
 	var checkin = req.body;
 	// Validate received input
-	if (typeof checkin !== 'object')
-	{
+	if (typeof checkin !== 'object') {
 		return res.status(400).send();
 	}
 	if (typeof checkin.message !== 'string' || typeof checkin.type !== 'string'
@@ -155,7 +155,7 @@ router.post('/checkin', isUser, function (req, res, next) {
 		if (err) { return res.status(500).send(); }
 		db.collection(res.locals.user.admin + "_checkins").insertOne(checkin, function (err, checkin) {
 			db.close();
-			if (err) { console.log(err); return res.status(500).send(); }
+			if (err) { return res.status(500).send(); }
 			return res.status(200).send();
 		});
 	});
@@ -176,6 +176,50 @@ router.get('/settings', isAdmin, function(req, res, next) {
 									userArray: results
 		});
 	});
+});
+
+router.post('/settings', isAdmin, function (req, res, next) {
+	var username = req.body.username.trim().replace(/[<()>"']/g, '*');
+	var type = req.body.type;
+	var adminUsername = res.locals.user.username;
+	console.log("Type: " + type);
+	console.log("Username: " + username);
+	console.log("Admin: " + adminUsername);
+	if (username === adminUsername) {
+		console.log("username equal");
+		return res.status(400).send();
+	}
+	if (typeof type === 'string' && typeof username === 'string') {
+		if (type === 'edit' || type === 'delete' || type === 'create') {
+			if (type === 'create') {
+				console.log("in create");
+			}
+			else if (type === 'edit') {
+				console.log("in edit");
+			}
+			else {
+				console.log("in delete");
+				MongoClient.connect(uri, function (err, db) {
+					db.collection('users').remove({username: username, admin: adminUsername}, 1, function (err) {
+						if (err) { db.close(); return res.status(500).send(); }
+						console.log("deleted user");
+						db.collection(adminUsername + "_checkins").remove({username: username}, function (err) {
+							db.close();
+							if (err) { db.close(); return res.status(500).send(); }
+							console.log("deleted checkins");
+							return res.status(200).send();
+						});
+					});
+				});
+			}
+		}
+		else {
+			res.status(400).send();
+		}
+	}
+	else {
+		res.status(400).send();	
+	}
 });
 
 // Return current time formatted
@@ -213,11 +257,10 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 	var techArray = [];
 	var currentMoment = moment();
 	MongoClient.connect(uri, function(err, db) {
-		if (err) {
-			return res.status(500).send();
-		}
+		if (err) { return res.status(500).send(); }
 		db.collection('users').find( { admin: res.locals.user.username }, {_id: 0, username: 1}).toArray( function (err, results) {
-			if (err) {return res.status(500).send();}
+			db.close();
+			if (err) { return res.status(500).send(); }
 			var numTechs = results.length;
 			results.forEach(function(tech) {
 				getDocsFromTech(tech.username, res.locals.user.username, function(err, results) {
@@ -236,7 +279,14 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 							if (a.name > b.name) {return 1;}
 							else {return -1;}
 						});
-						var html = jade.renderFile('./views/techList.jade', { techArray: techArray });
+						if (techArray.length === 0 ) {
+							var html = "No active users, your users will appear here after they have at least one Check In."
+							+ " If you have no users, please add them on the settings page (Gear Icon above)!";
+						}
+						else {
+							var html = jade.renderFile('./views/techList.jade', { techArray: techArray });
+						}
+						
 						res.writeHead(200,"OK",{"Content-Type":"text/html"});
 						res.end(html);
 					}
@@ -244,7 +294,6 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 			});
 		});
 	});
-	
 });
 
 // Returns a JSON object with an array of 5 lat and lng values for each tech

@@ -1,31 +1,16 @@
-mixin users(userObj)
-	tr
-		td= userObj.username
-		td= userObj.firstName
-		td= userObj.lastName
-		td= userObj.account_type
-		td
-			button#edit-user.btn.btn-warning.btn-xs(title=userObj.username data-toggle='modal' data-target='#edit-user-modal') Edit User
-			
 extends layout
 
 block content
+	#loader
+		.loader
+	#notify
+		p Content
+		input.btn.btn-primary.btn-sm(name='close', value='Close', type='button')
 	#admin-settings
 		p Admin Settings Coming Soon!
+		// include setings-admin.jade
 	#users
-		table
-			caption Users List
-			tr
-				th Username
-				th First Name
-				th Last Name
-				th Account Type
-				th More Info
-			each user in userArray
-				+users(user)
-			tr#newuser
-				td(colspan='5')
-					button#add-user.btn.btn-primary.btn-xs(data-toggle='modal' data-target='#new-user-modal') New User
+		include settings-user.jade
 	#new-user-modal.modal.fade(tab-index='-1' role='dialog')
 		.modal-dialog(role='document')
 			.modal-content
@@ -38,3 +23,17 @@ block content
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close
 					button.btn.btn-success Add User
+	#delete-user-modal.modal.fade(tab-index='-1' role='dialog')
+		.modal-dialog.modal-sm(role='document')
+			.modal-content
+				.modal-header
+					button.close(type='button' data-dismiss='modal')
+						span &times;
+					h4.modal-title Delete User
+				.modal-body
+					p WARNING!
+					p Are you sure you want to delete this user? This action is permanent and cannot be undone.
+					p All history of Check Ins for this user will also be removed
+				.modal-footer
+					button.btn.btn-primary(data-dismiss='modal') Close
+					button.btn.btn-danger Delete User

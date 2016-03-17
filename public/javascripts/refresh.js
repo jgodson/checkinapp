@@ -2,9 +2,14 @@ var updates = 3// in minutes
 var timer;
 var countdown;
 
+// Random number to prevent IE from cacheing requests
+function genNumber() {
+	return Math.random() * 10000000000;
+}
+
 function updateTime(){
 	var req = new XMLHttpRequest();
-	req.open("GET","/app/time?tz=" + timezone, true);
+	req.open("GET","/app/time?tz=" + timezone + "&" + genNumber(), true);
 	req.onreadystatechange = function(){
 		if(req.readyState == 4){
 			document.getElementById("currentTime").innerHTML = req.responseText;
@@ -15,7 +20,7 @@ function updateTime(){
 
 function updateTechs(){
 	var req = new XMLHttpRequest();
-	req.open("GET","/app/updateTechs?tz=" + timezone, true);
+	req.open("GET","/app/updateTechs?tz=" + timezone + "&" + genNumber(), true);
 	req.onreadystatechange = function(){
 		if(req.readyState == 4){
 			document.getElementById("techList").innerHTML = req.responseText;
@@ -26,7 +31,7 @@ function updateTechs(){
 
 function updateMap() {
 	var req = new XMLHttpRequest();
-	req.open("GET","/app/updateMap?tz=" + timezone, true);
+	req.open("GET","/app/updateMap?tz=" + timezone + "&" + genNumber(), true);
 	req.onreadystatechange = function(){
 		if(req.readyState == 4){
 			deleteMarkers();

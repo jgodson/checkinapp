@@ -1,0 +1,25 @@
+mixin users(userObj)
+	tr
+		td= userObj.username
+		td= userObj.firstName
+		td= userObj.lastName
+		td= userObj.account_type
+		td= userObj.userGroup
+		td
+			button.delete-user.btn.btn-danger.btn-xs(title=userObj.username data-toggle='modal' data-target='#delete-user-modal') Delete User
+			button.edit-user.btn.btn-warning.btn-xs(title=userObj.username data-toggle='modal' data-target='#edit-user-modal') Edit User
+
+table
+	caption Users List
+	tr
+		th Username
+		th First Name
+		th Last Name
+		th Account Type
+		th Group
+		th 
+	each user in userArray
+		+users(user)
+	tr#new-user
+		td(colspan='6')
+			button#add-user.btn.btn-primary.btn-xs(data-toggle='modal' data-target='#new-user-modal') New User

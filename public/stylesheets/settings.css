@@ -4,11 +4,43 @@ body {
 }
 
 #users {
-	width: 100%;
+	width: 94%;
+	margin-left: 3%;
+	margin-right: 3%;
+}
+
+#admin-settings {
+	text-align: center;
+}
+
+.edit-user {
+	float: right;
+	margin-right: 5px;
+}
+
+.delete-user {
+	float: right;
+}
+
+#new-user {
+	text-align: center;
+	border: none;
+}
+
+#delete-user-modal {
+    color: red;
 }
 
 table {
 	width: 100%;
+}
+
+caption {
+	text-align: center;
+}
+
+th {
+	padding: 10px;
 }
 
 tr {
@@ -16,5 +48,24 @@ tr {
 }
 
 td {
-	padding: 2px;
+	padding: 10px;
+}
+
+#notify {
+	display: none;
+    position: fixed;
+    top: 55px;
+    z-index: 100;
+    height: 80px;
+    right: 5px;
+    width: 200px;
+    text-align: center;
+    color: white;
+    padding: 10px;
+    border-radius: 3px;
+    background-color: rgba(0,00,0,0.6);
+}
+
+#notify input.btn.btn-primary.btn-sm {
+    margin-top: 7px;
 }
