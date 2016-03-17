@@ -33,7 +33,7 @@ function timeFunctions (docTime, currentMoment, timezone) {
 function getUsersForAdmin (adminName, callback){
 	MongoClient.connect(uri, function (err, db) {
 		if (err) { return callback(err); }
-		db.collection('users').find({admin: adminName}).toArray( function (err, results) {
+		db.collection('users').find({admin: adminName}).toArray(function (err, results) {
 			db.close();
 			if (err) { return callback(err); }
 			callback(null, results);
@@ -171,11 +171,16 @@ router.get('/', hasPermissions, function(req, res, next) {
 
 router.get('/settings', isAdmin, function(req, res, next) {
 	getUsersForAdmin(res.locals.user.username, function(err, results) {
+		if (err) { return res.status(500).send(); }
 		res.render('settings', { 
-									title: 'Settings',
-									userArray: results
+			title: 'Settings',
+			userArray: results
 		});
 	});
+});
+
+router.get('/settings/:username', isAdmin, function(req, res, next) {
+	req.query
 });
 
 router.post('/settings', isAdmin, function (req, res, next) {
@@ -193,6 +198,10 @@ router.post('/settings', isAdmin, function (req, res, next) {
 		if (type === 'edit' || type === 'delete' || type === 'create') {
 			if (type === 'create') {
 				console.log("in create");
+				// getUsersForAdmin(adminUsername, function (err, results) {
+				// 	var html = jade.renderFile('./views/settings-user.jade', { userArray: results });
+				// 	return res.status(200).send(html);
+				// });
 			}
 			else if (type === 'edit') {
 				console.log("in edit");
@@ -202,11 +211,9 @@ router.post('/settings', isAdmin, function (req, res, next) {
 				MongoClient.connect(uri, function (err, db) {
 					db.collection('users').remove({username: username, admin: adminUsername}, 1, function (err) {
 						if (err) { db.close(); return res.status(500).send(); }
-						console.log("deleted user");
 						db.collection(adminUsername + "_checkins").remove({username: username}, function (err) {
 							db.close();
 							if (err) { db.close(); return res.status(500).send(); }
-							console.log("deleted checkins");
 							return res.status(200).send();
 						});
 					});

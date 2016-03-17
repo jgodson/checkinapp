@@ -23,6 +23,18 @@ block content
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close
 					button.btn.btn-success Add User
+	#edit-user-modal.modal.fade(tab-index='-1' role='dialog')
+		.modal-dialog(role='document')
+			.modal-content
+				.modal-header
+					button.close(type='button' data-dismiss='modal')
+						span &times;
+					h4.modal-title Edit User
+				.modal-body
+					
+				.modal-footer
+					button.btn.btn-danger(data-dismiss='modal') Close
+					button.btn.btn-success Save Changes
 	#delete-user-modal.modal.fade(tab-index='-1' role='dialog')
 		.modal-dialog.modal-sm(role='document')
 			.modal-content

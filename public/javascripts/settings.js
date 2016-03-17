@@ -20,7 +20,6 @@ $(document).ready(function () {
 		var username = $(event.relatedTarget).attr('title');
 		$(this).find('.modal-title').text("Deleting user " + username);
 		$(this).find('.btn-danger').on('click', function () {
-			console.log("Deleting user " + username);
 			$('#delete-user-modal').modal('hide');
 			$('body').css('margin-top', '0px');
 			$('#loader').fadeIn();
@@ -30,7 +29,7 @@ $(document).ready(function () {
 			req.onreadystatechange = function(){
 				if (req.readyState == 4){
 					if (req.status === 200) { 
-						// refresh content
+						$('[title=' + username + ']').closest('tr').remove();
 						showRequestStatus('Successfully deleted user');
 					}
 					else if (req.status === 400) {
@@ -47,6 +46,14 @@ $(document).ready(function () {
 	
 	$('#delete-user-modal').on('hide.bs.modal', function () {
 		$(this).find('.btn-danger').off('click');
+	});
+	
+	$('#edit-user-modal').on('show.bs.modal', function (event) {
+		
+	});
+	
+	$('#edit-user-modal').on('hide.bs.modal', function (event) {
+		
 	});
 	
 	$(document).on('click', 'input[name=close]', function() {
