@@ -49,11 +49,33 @@ $(document).ready(function () {
 	});
 	
 	$('#edit-user-modal').on('show.bs.modal', function (event) {
-		
+		var username = $(event.relatedTarget).attr('title');
+		/*
+		{
+			account_type: 'user',
+			email: "redfire1988@gmail.com",
+			admin: "ambyint",
+			userGroup: "FST",
+			firstName: firstName,
+			lastName: lastName,
+			username: username,
+			password: hash,
+			created_At: moment().toString(),
+			icon: "/images/markers/default.png",
+			reminders: false, //check in reminders
+			notifications: false, //push notifications
+			timezone: "America/Regina",
+			emergencyContact: {
+				phone: "306-485-7166",
+				email: "jason_c_g@hotmail.com"
+			}
+		}
+		*/
+		$(this).find('.modal-title').text("Editing user " + username);
 	});
 	
 	$('#edit-user-modal').on('hide.bs.modal', function (event) {
-		
+		$(this).find('.btn-success').off('click');
 	});
 	
 	$(document).on('click', 'input[name=close]', function() {

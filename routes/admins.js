@@ -9,6 +9,11 @@ var ObjectId = require('mongodb').ObjectId;
 var uri = process.env.MONGO_URI;
 
 router.get('/login', function(req, res, next) {
+	if (!!req.user) {
+		if (req.user.account_type === 'admin' || req.user.account_type === 'view') {
+			return res.redirect('/app');
+		}
+	}
  	res.render('admin_login', { title: 'Admin Login' });
 });
 

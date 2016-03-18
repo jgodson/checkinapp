@@ -41,14 +41,13 @@ function getUsersForAdmin (adminName, callback){
 	});
 }
 
-function personExists (username, callback) {
+function getUserInfo (username, admin, callback) {
 	MongoClient.connect(uri, function (err, db) {
 		if (err) { return callback(err); }
-		db.collection('users').findOne({ username: username }, function (err, result) {
+		db.collection('users').findOne({ username: username, admin: admin }, function (err, result) {
 			db.close();
 			if (err) { return callback(err); }
-			if (result) { return true; }
-			return false;
+			if (result) { return callback(null, result); }
 		})
 	});
 }
@@ -180,7 +179,12 @@ router.get('/settings', isAdmin, function(req, res, next) {
 });
 
 router.get('/settings/:username', isAdmin, function(req, res, next) {
-	req.query
+	var username = req.params.username;
+	if (typeof username !== 'string') {
+		return res.status(400).send();
+	}
+	
+	
 });
 
 router.post('/settings', isAdmin, function (req, res, next) {
