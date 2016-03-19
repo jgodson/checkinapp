@@ -1,37 +1,43 @@
 #!/usr/bin/env node
 
-/**
- * Module dependencies.
- */
+// If not in production, require file for environment variables
+if (!process.env.MONGO_URI) {
+	require('../env.js');
+}
 
-var app = require('../app');
-var debug = require('debug')('fstcheckinpage:server');
-var http = require('http');
+// Make variables avaialbe to other functions
+var server;
+var debug;
 
-/**
- * Get port from environment and store in Express.
- */
 
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+// MongoDB dependencies
+const MongoClient = require('mongodb').MongoClient;
+const URI = process.env.MONGO_URI;
 
-/**
- * Create HTTP server.
- */
+// Conenct to DB first, then do everything else
+connectToDB(URI, function (err, db) {
+	// Make db app global
+	global.DB = db;
+	
+	// Other dependencies
+	var app = require('../app');
+	debug = require('debug')('fstcheckinpage:server');
+	var http = require('http');
 
-var server = http.createServer(app);
+	// Get port from environment and store in Express.
+	var port = normalizePort(process.env.PORT || '3000');
+	app.set('port', port);
 
-/**
- * Listen on provided port, on all network interfaces.
- */
+	// Create Server
+	server = http.createServer(app);
+	
+	// Listen on provided port, on all network interfaces.
+	server.listen(port);
+	server.on('error', onError);
+	server.on('listening', onListening);
+});
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
-
-/**
- * Normalize a port into a number, string, or false.
- */
+ // Normalize a port into a number, string, or false.
 
 function normalizePort(val) {
   var port = parseInt(val, 10);
@@ -49,9 +55,7 @@ function normalizePort(val) {
   return false;
 }
 
-/**
- * Event listener for HTTP server "error" event.
- */
+// Event listener for HTTP server "error" event.
 
 function onError(error) {
   if (error.syscall !== 'listen') {
@@ -77,9 +81,7 @@ function onError(error) {
   }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
+// Event listener for HTTP server "listening" event.
 
 function onListening() {
   var addr = server.address();
@@ -87,4 +89,12 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+}
+
+function connectToDB(URI, callback) {
+	MongoClient.connect(URI, function (err, db) {
+		if (err) throw err;
+		console.log('Database connection successful!');
+		callback(null, db)
+	});
 }

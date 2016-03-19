@@ -1,12 +1,10 @@
-var express = require('express');
-var router = express.Router();
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var bcrypt = require('bcrypt-nodejs');
-var MongoClient = require('mongodb').MongoClient;
-var ObjectId = require('mongodb').ObjectId; 
-
-var uri = process.env.MONGO_URI;
+const express = require('express');
+const router = express.Router();
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt-nodejs');
+const ObjectId = require('mongodb').ObjectId; 
+const DB = global.DB;
 
 router.get('/login', function(req, res, next) {
 	if (!!req.user) {
@@ -22,25 +20,18 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-	MongoClient.connect(uri, function(err, db) {
+	DB.collection('users').findOne({_id: ObjectId(id)}, function(err, user) {
 		if (err) { return done(err, null); }
- 		db.collection('users').findOne({_id: ObjectId(id)}, function(err, user) {
-			if (err) { return done(err, null); }
-			else {
-				db.close();
-				done(err, user);
-			}
-  		});
+		else {
+			done(err, user);
+		}
 	});
 });
 
-passport.use(new LocalStrategy({
-	passReqToCallback: true
-	},
-  function(req, username, password, done) {
-	  username = username.toLowerCase();
-	  MongoClient.connect(uri, function(err, db) {
-		db.collection('users').findOne({ username: username }, function (err, user) {
+passport.use(new LocalStrategy({ passReqToCallback: true },
+	function(req, username, password, done) {
+		username = username.toLowerCase();
+		DB.collection('users').findOne({ username: username }, function (err, user) {
 			if (err) { return done(err); }
 			if (!user){
 				return done(null, false);
@@ -72,8 +63,7 @@ passport.use(new LocalStrategy({
 				});
 			}
 		});
-    });
-  }
+	}
 ));
 
 router.post('/login', passport.authenticate('local', {

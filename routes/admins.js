@@ -1,12 +1,6 @@
-var express = require('express');
-var router = express.Router();
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var bcrypt = require('bcrypt-nodejs');
-var MongoClient = require('mongodb').MongoClient;
-var ObjectId = require('mongodb').ObjectId; 
-
-var uri = process.env.MONGO_URI;
+const express = require('express');
+const router = express.Router();
+const passport = require('passport');
 
 router.get('/login', function(req, res, next) {
 	if (!!req.user) {

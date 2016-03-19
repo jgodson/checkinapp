@@ -1,30 +1,32 @@
-// If no MONGO_URI is available from process.env then include file for dev purposes
+// Some vars for cookies
 var secureCookie = true;
-var COOKIE_SESSION_TTL = (7 * 24 * 60 * 60 * 1000); // 7 days
-var SESS_STORE_TOUCH_TIME = (24 * 60 * 60 * 1000) // 24 hours
+const COOKIE_SESSION_TTL = (7 * 24 * 60 * 60 * 1000); // 7 days
+const SESS_STORE_TOUCH_TIME = (24 * 60 * 60 * 1000) // 24 hours
 
 // If no env variables, include file for development.
-if (!process.env.MONGO_URI) {
+if (!process.env.SESSION_SECRET) {
 	require('./env.js');
 	// Cookie not secure in dev.
 	secureCookie = false;
 };
 
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var bodyParser = require('body-parser');
-var passport = require('passport');
-var session = require('express-session');
+// Require statements
+const express = require('express');
+const path = require('path');
+const favicon = require('serve-favicon');
+const logger = require('morgan');
+const bodyParser = require('body-parser');
+const passport = require('passport');
+const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
-var admins = require('./routes/admins');
-var publicRoute = require('./routes/public');
+// Routes
+const routes = require('./routes/index');
+const users = require('./routes/users');
+const admins = require('./routes/admins');
+const publicRoute = require('./routes/public');
 
-var app = express();
+const app = express();
 
 // Remove the powered by express header
 app.disable('x-powered-by');
