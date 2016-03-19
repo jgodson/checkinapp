@@ -43,9 +43,7 @@ function updateMap() {
 
 function refresh() {
 	var $countdown = $('#notify p span');
-	console.log("refresh function called");
 	timer = setTimeout(function () {
-		console.log("refresh happened");
 		updateTechs();
 		updateMap();
 		updateTime();
@@ -59,7 +57,6 @@ function refresh() {
 			$countdown.text("60 seconds");
 			clearInterval(countdown);
 			clearTimeout(timer);
-			console.log("Interval and timeout cleared");
 			$('#notify').fadeOut();
 		}
 	}, 1000);
@@ -70,7 +67,7 @@ window.onload = function () {
 	updateTime();
 	updateMap();
 	setInterval(function () {
-		console.log("Inverval trigger");
+		console.log("Triggered at: " + Date());
 		refresh();
 	}, (updates - 1) * 60000);
 }

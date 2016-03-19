@@ -1,6 +1,5 @@
 var express = require('express');
 var router = express.Router();
-var MongoClient = require('mongodb').MongoClient;
 var moment = require("moment");
 var momentTZ = require("moment-timezone");
 var jade = require("jade");
@@ -41,6 +40,14 @@ function getUsersForAdmin (adminName, callback){
 	});
 }
 
+function removePasswords (arrayOfUsers) {
+	arrayOfUsers.forEach(function (user) {
+		delete user.password;
+	});
+	return arrayOfUsers;
+} 
+
+// NOT USED YET
 function getUserInfo (username, admin, callback) {
 	MongoClient.connect(uri, function (err, db) {
 		if (err) { return callback(err); }
@@ -48,6 +55,7 @@ function getUserInfo (username, admin, callback) {
 			db.close();
 			if (err) { return callback(err); }
 			if (result) { return callback(null, result); }
+			callback('No user found');
 		})
 	});
 }
@@ -82,7 +90,6 @@ function getCheckInLatLng (tech, icon, max, timezone, collection, callback) {
 }
 
 // Make sure user is logged in when sending requests
-
 function hasPermissions (req, res, next) {
 	if ( req.isAuthenticated()) {
 		if (res.locals.user.account_type === 'admin' ||
@@ -115,10 +122,10 @@ function isAdmin (req, res, next) {
 			return next();
 		}
 		else {
-			res.redirect('/users/login');
+			res.redirect('/admins/login');
 		}
 	}
-	return res.redirect('/users/login');
+	return res.redirect('/admins/login');
 }
 
 router.get('/checkin', isUser, function (req, res, next) {
@@ -173,24 +180,18 @@ router.get('/settings', isAdmin, function(req, res, next) {
 		if (err) { return res.status(500).send(); }
 		res.render('settings', { 
 			title: 'Settings',
-			userArray: results
+			userArray: removePasswords(results)
 		});
 	});
-});
-
-router.get('/settings/:username', isAdmin, function(req, res, next) {
-	var username = req.params.username;
-	if (typeof username !== 'string') {
-		return res.status(400).send();
-	}
-	
-	
 });
 
 router.post('/settings', isAdmin, function (req, res, next) {
 	var username = req.body.username.trim().replace(/[<()>"']/g, '*');
 	var type = req.body.type;
 	var adminUsername = res.locals.user.username;
+	if (typeof req.body.data === 'object') {
+		var data = req.body.data;
+	}
 	console.log("Type: " + type);
 	console.log("Username: " + username);
 	console.log("Admin: " + adminUsername);

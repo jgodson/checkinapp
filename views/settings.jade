@@ -19,7 +19,7 @@ block content
 						span &times;
 					h4.modal-title Add a new user
 				.modal-body
-					
+					p Stuff
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close
 					button.btn.btn-success Add User
@@ -31,7 +31,7 @@ block content
 						span &times;
 					h4.modal-title Edit User
 				.modal-body
-					
+					p Stuff
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close
 					button.btn.btn-success Save Changes
@@ -49,3 +49,5 @@ block content
 				.modal-footer
 					button.btn.btn-primary(data-dismiss='modal') Close
 					button.btn.btn-danger Delete User
+	script(type='text/javascript').
+		var userData = !{JSON.stringify(userArray)};
