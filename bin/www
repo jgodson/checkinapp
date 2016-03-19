@@ -8,6 +8,9 @@ if (!process.env.MONGO_URI) {
 // Make variables avaialbe to other functions
 var server;
 var debug;
+var port;
+var http;
+var app;
 
 
 // MongoDB dependencies
@@ -20,12 +23,12 @@ connectToDB(URI, function (err, db) {
 	global.DB = db;
 	
 	// Other dependencies
-	var app = require('../app');
+	app = require('../app');
 	debug = require('debug')('fstcheckinpage:server');
-	var http = require('http');
+	http = require('http');
 
 	// Get port from environment and store in Express.
-	var port = normalizePort(process.env.PORT || '3000');
+	port = normalizePort(process.env.PORT || '3000');
 	app.set('port', port);
 
 	// Create Server

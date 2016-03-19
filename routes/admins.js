@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 
+
 router.get('/login', function(req, res, next) {
 	if (!!req.user) {
 		if (req.user.account_type === 'admin' || req.user.account_type === 'view') {

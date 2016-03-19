@@ -3,10 +3,9 @@ var secureCookie = true;
 const COOKIE_SESSION_TTL = (7 * 24 * 60 * 60 * 1000); // 7 days
 const SESS_STORE_TOUCH_TIME = (24 * 60 * 60 * 1000) // 24 hours
 
-// If no env variables, include file for development.
-if (!process.env.SESSION_SECRET) {
-	require('./env.js');
-	// Cookie not secure in dev.
+// If in development no secure cookies.
+console.log("Environment:" + process.env.NODE_ENV);
+if (process.env.NODE_ENV === 'dev') {
 	secureCookie = false;
 };
 

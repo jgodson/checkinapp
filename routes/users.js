@@ -20,7 +20,7 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-	DB.collection('users').findOne({_id: ObjectId(id)}, function(err, user) {
+	DB.collection('users').findOne({ _id: ObjectId(id) }, function(err, user) {
 		if (err) { return done(err, null); }
 		else {
 			done(err, user);
@@ -41,8 +41,7 @@ passport.use(new LocalStrategy({ passReqToCallback: true },
 					if (error) { return done(error); }
 					if (result) {
 						if (req.baseUrl === '/admins') {
-							if (user.account_type === 'admin' || user.account_type === 'view')
-							{
+							if (user.account_type === 'admin' || user.account_type === 'view') {
 								return done(null, user);
 							}
 							else {
@@ -55,9 +54,8 @@ passport.use(new LocalStrategy({ passReqToCallback: true },
 						else {
 							return done(null, false);
 						}
-							
-						
-					} else {
+					} 
+					else {
 						return done(null, false);
 					}
 				});
