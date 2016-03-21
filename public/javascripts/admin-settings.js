@@ -89,6 +89,8 @@ $(document).ready(function () {
 			showRequestStatus('Error: Could not find user', false);
 			return;
 		}
+		$(this).find('input[name=first-name]').val(userData[index].firstName);
+		$(this).find('input[name=last-name]').val(userData[index].lastName);
 		$(this).find('input[name=group]').val(userData[index].userGroup);
 		$('#icon').attr('src', userData[index].icon);
 		$(this).find('input[name=emergency_name]').val(userData[index].emergencyContact.name);
@@ -129,9 +131,20 @@ $(document).ready(function () {
 		});
 		// Add listener for confirm edit button
 		$(this).find('.btn-success').on('click', function () {
+			var $modal = $('#edit-user-modal');
+			userData[index].firstName = $modal.find('input[name=first-name]').val();
+			userData[index].lastName = $modal.find('input[name=last-name]').val();
+			userData[index].userGroup = $modal.find('input[name=group]').val();
+			userData[index].icon = $('#icon').attr('src');
+			userData[index].emergencyContact.name = $modal.find('input[name=emergency_name]').val();
+			userData[index].emergencyContact.phone = $modal.find('input[name=emergency_phone]').val();
+			userData[index].emergencyContact.email = $modal.find('input[name=emergency_email]').val();
+			var $row = $('[title=' + username + ']').closest('tr');
+			$row.find('td:nth-child(2)').text(userData[index].firstName);
+			$row.find('td:nth-child(3)').text(userData[index].lastName);
+			$row.find('td:nth-child(5)').text(userData[index].userGroup);
 			$('#edit-user-modal').modal('hide');
 			$('#loader').fadeIn();
-			var index = findIndexOfUsername(username);
 			var req = new XMLHttpRequest();
 			req.open("POST","/app/settings/", true);
 			req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");

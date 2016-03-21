@@ -33,6 +33,15 @@ block content
 						span &times;
 					h4.modal-title Edit User
 				.modal-body
+					.form-group.well#name
+						p.centered-label Name
+						.form-inline
+							#first
+								label First
+								input.form-control(name='first-name', type='text')
+							#last
+								label Last
+								input.form-control(name='last-name', type='text')
 					.form-group
 						button#reset-password.btn.btn-danger.btn-block Reset Password
 					.form-group.well

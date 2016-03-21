@@ -8,7 +8,6 @@ const DB = global.DB;
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt-nodejs');
-const EMAIL_FROM_NAME = 'Tech Check Ins';
 
 // Set up nodemailer
 var smtpConfig = {
@@ -22,6 +21,8 @@ var smtpConfig = {
 // Declare a few constant variables
 const MAPS_API_KEY = process.env.MAPS_API_KEY;
 const DEFAULT_ICON = "/images/markers/orange_Marker.png";
+const EMAIL_FROM_NAME = 'Tech Check Ins';
+const VALID_EDIT_PROPS = process.env.VALID_EDIT_PROPS.split(' '); // Make an array out of the string
 
 // Takes the time from the document and the current time and gets the time diff and formats the current time
 function timeFunctions (docTime, currentMoment, timezone) {
@@ -59,8 +60,8 @@ function removePasswords (arrayOfUsers) {
 } 
 
 // Check if username is taken
-function checkUsername (username, callback) {
-	DB.collection('users').findOne({ username: username}, function (err, result) {
+function checkUsername (username, admin, callback) {
+	DB.collection('users').findOne({ username: username, admin: admin}, function (err, result) {
 		if (err) { return callback(err); }
 		return callback(null, result);
 	});
@@ -84,10 +85,10 @@ function genPassword(desiredLength) {
 function sendPassword(user, isNew, callback) {
 	var newPassword = genPassword(12);
 	bcrypt.hash(newPassword, bcrypt.genSaltSync(), null, function(err, hash) {
-		if (err) { return res.status(500).send(); }
+		if (err) { callback(err); }
 		DB.collection('users').updateOne({ username: user.username }, { $set : { password: hash } }
 		, function (err, result) {
-			if (err) { return res.status(500).send(); }
+			if (err) { callback(err); }
 			if (user.account_type === 'user' || user.account_type === 'view') {
 				if (isNew) {
 					var mailOpts = {
@@ -125,11 +126,8 @@ function sendPassword(user, isNew, callback) {
 			var transporter = nodemailer.createTransport(smtpConfig);
 
 			transporter.sendMail(mailOpts, function (err, response) {
-				if (err) {
-					callback(err, false);
-				} else {
-					callback(null, true);
-				}
+				if (err) { callback(err, false); } 
+				else { console.log(response); callback(null, true); }
 			});
 		});
 	});
@@ -298,7 +296,7 @@ router.post('/settings', isAdmin, function (req, res, next) {
 				// });
 			}
 			else {
-				checkUsername(username, function(err, result) {
+				checkUsername(username, adminUsername, function(err, result) {
 					if (result) {
 						if (type === 'delete') {
 							console.log("in delete");
@@ -312,18 +310,34 @@ router.post('/settings', isAdmin, function (req, res, next) {
 						}
 						else if (type === 'edit') {
 							console.log('in edit');
-							res.status(200).send()
+							var newData = {};
+							for (var prop in data) {
+								if (data.hasOwnProperty(prop)) {
+									VALID_EDIT_PROPS.forEach(function (validProp) {
+										if (prop === validProp) {
+											newData[prop] = data[prop];
+										}
+									});
+								}
+							}
+							DB.collection('users').updateOne({ username: username}, { $set : newData }, function (err, result) {
+								if (err) { res.status(500).send(); }
+								else {
+									var newName = newData.firstName + " " + newData.lastName;
+									DB.collection(adminUsername + '_checkins').updateMany({ username: username }
+									, { $set: { name : newName }}, function (err, result) {
+										if (err) { res.status(500).send(); }
+										else { res.status(200).send(); }
+									});
+								}
+							});
 						}
 						else {
 							console.log('in reset');
-							sendPassword(result, function (err, sent) {
+							sendPassword(result, false, function (err, sent) {
 								if (err) { return res.status(500).send(); }
-								if (sent) {
-									return res.status(200).send();
-								}
-								else {
-									return res.status(500).send();
-								}
+								if (sent) { return res.status(200).send(); }
+								else { return res.status(500).send(); }
 							});
 							
 						}

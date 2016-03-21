@@ -89,12 +89,12 @@ td {
 	margin: 5px;
 	cursor: pointer;
 	overflow-y: auto;
-	color: white;
 }
 
 #icon-images p {
 	font-size: large;
 	margin-top: 10px;
+	color: white;
 }
 
 #edit-user-modal p {
@@ -105,4 +105,24 @@ td {
 #edit-user-modal .centered-label {
 	text-align: center;
 	margin: 5px;
+}
+
+#edit-user-modal .well {
+	padding: 10px;
+}
+
+#name {
+	min-height: 80px;
+}
+
+#name #first {
+	float: left;
+}
+
+#name #last {
+	float: right;
+}
+
+#name label {
+	margin-right: 10px;
 }
