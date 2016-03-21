@@ -23,8 +23,10 @@ html
 						.navbar-brand= user.firstName + " " + user.lastName
 					#navbar.collapse.navbar-collapse
 						ul.nav.navbar-nav
-							li.active
+							li(class=(title='Main' ? 'active' : ''))
 								a(href='/app/checkin') Check Ins
+							li(class=(title='Settings' ? 'active' : ''))
+								a(href='/app/userSettings') Settings
 							if user
 								li
 									a(href='/users/logout') Log Out

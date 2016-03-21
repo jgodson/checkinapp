@@ -4,7 +4,7 @@ const COOKIE_SESSION_TTL = (7 * 24 * 60 * 60 * 1000); // 7 days
 const SESS_STORE_TOUCH_TIME = (24 * 60 * 60 * 1000) // 24 hours
 
 // If in development no secure cookies.
-console.log("Environment:" + process.env.NODE_ENV);
+console.log("Environment: " + process.env.NODE_ENV);
 if (process.env.NODE_ENV === 'dev') {
 	secureCookie = false;
 };

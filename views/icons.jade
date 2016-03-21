@@ -1,0 +1,9 @@
+mixin icons(filename) 
+	img(src='/images/markers/' + filename width='20px' height='34px')
+	
+p.text-center Please select your preferred icon for this user
+each filename in iconArray
+	+icons(filename)
+#button-div
+	button#close-icon-picker.btn.btn-danger.center-block Cancel
+

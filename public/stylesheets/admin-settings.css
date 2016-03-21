@@ -40,7 +40,7 @@ caption {
 }
 
 th {
-	padding: 10px;
+	padding: 3px;
 }
 
 tr {
@@ -48,7 +48,7 @@ tr {
 }
 
 td {
-	padding: 10px;
+	padding: 3px;
 }
 
 #notify {
@@ -68,4 +68,41 @@ td {
 
 #notify input.btn.btn-primary.btn-sm {
     margin-top: 7px;
+}
+
+#icon {
+	margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+#pick-icon {
+	display: none;
+	position: fixed;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 10000;
+	background-color: rgba(0, 0, 0, 0.8);
+}
+
+#icon-images img {
+	margin: 5px;
+	cursor: pointer;
+	overflow-y: auto;
+	color: white;
+}
+
+#icon-images p {
+	font-size: large;
+	margin-top: 10px;
+}
+
+#edit-user-modal p {
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+#edit-user-modal .centered-label {
+	text-align: center;
+	margin: 5px;
 }

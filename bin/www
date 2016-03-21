@@ -19,13 +19,14 @@ const URI = process.env.MONGO_URI;
 
 // Conenct to DB first, then do everything else
 connectToDB(URI, function (err, db) {
-	// Make db app global
+	// Make db app global variable
 	global.DB = db;
 	
 	// Other dependencies
 	app = require('../app');
 	debug = require('debug')('fstcheckinpage:server');
 	http = require('http');
+	require('../db');
 
 	// Get port from environment and store in Express.
 	port = normalizePort(process.env.PORT || '3000');

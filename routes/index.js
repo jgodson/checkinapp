@@ -4,12 +4,24 @@ const router = express.Router();
 const moment = require("moment");
 const momentTZ = require("moment-timezone");
 const jade = require("jade");
-const url = require("url");
 const DB = global.DB;
+const fs = require('fs');
+const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt-nodejs');
+const EMAIL_FROM_NAME = 'Tech Check Ins';
+
+// Set up nodemailer
+var smtpConfig = {
+	service: process.env.NODEMAILER_SERVICE,
+    auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASSWORD
+    }
+};
 
 // Declare a few constant variables
 const MAPS_API_KEY = process.env.MAPS_API_KEY;
-const DEFAULT_ICON = "/images/markers/default.png";
+const DEFAULT_ICON = "/images/markers/orange_Marker.png";
 
 // Takes the time from the document and the current time and gets the time diff and formats the current time
 function timeFunctions (docTime, currentMoment, timezone) {
@@ -46,12 +58,80 @@ function removePasswords (arrayOfUsers) {
 	return arrayOfUsers;
 } 
 
-// NOT USED YET
-function getUserInfo (username, admin, callback) {
-	DB.collection('users').findOne({ username: username, admin: admin }, function (err, result) {
+// Check if username is taken
+function checkUsername (username, callback) {
+	DB.collection('users').findOne({ username: username}, function (err, result) {
 		if (err) { return callback(err); }
-		if (result) { return callback(null, result); }
-		callback('No user found');
+		return callback(null, result);
+	});
+}
+
+function genPassword(desiredLength) {
+	var password = '';
+	var uppercase = false;
+	var chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+	'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+	'!', '@', '#', '$', '%', '&'];
+	while (password.length < desiredLength) {
+		uppercase = Math.floor(Math.random() * 10) < 4 ? true : false;
+		password += uppercase ? chars[Math.floor(Math.random() * 41)].toUpperCase() 
+			: chars[Math.floor(Math.random() * 41)];
+	}
+	return password;
+}
+
+// Send password reset email or new account info
+function sendPassword(user, isNew, callback) {
+	var newPassword = genPassword(12);
+	bcrypt.hash(newPassword, bcrypt.genSaltSync(), null, function(err, hash) {
+		if (err) { return res.status(500).send(); }
+		DB.collection('users').updateOne({ username: user.username }, { $set : { password: hash } }
+		, function (err, result) {
+			if (err) { return res.status(500).send(); }
+			if (user.account_type === 'user' || user.account_type === 'view') {
+				if (isNew) {
+					var mailOpts = {
+						from: EMAIL_FROM_NAME,
+						to: user.email,
+						subject: 'An admin has created an account for you!',
+						text : 'Admin with the username of ' + user.admin + ' has created an account for you on Tech Check Ins!'
+							+ ' Your username is: ' + user.username + ' and your password is: ' + newPassword + '. Please log in'
+							+ ' to change it and start checking in!',
+						html : '<p>Admin with the username of ' + user.admin + ' has created an account for you on Tech Check ' 
+							+ 'Ins!</p><p>Your username is: ' + user.username + ' and your password is: ' + newPassword + '</p>'
+							+ '<p>Please log in to change it.</p>'
+					};
+				}
+				else {
+					var mailOpts = {
+						from: EMAIL_FROM_NAME,
+						to: user.email,
+						subject: 'Your admin has reset your password',
+						text : 'Your new password is: ' + newPassword + '. Please log in to change it.',
+						html : '<p>Your new password is: ' + newPassword + '</p><p>Please log in to change it.</p>'
+					};
+				}
+			}
+			else {
+				var mailOpts = {
+					from: EMAIL_FROM_NAME,
+					to: user.email,
+					subject: 'You have requested a password reset',
+					text : 'Your new password is: ' + newPassword + '. Please log in to change it.',
+					html : '<p>Your new password is: ' + newPassword + '</p><p>Please log in to change it.</p>'
+				};
+			}
+		
+			var transporter = nodemailer.createTransport(smtpConfig);
+
+			transporter.sendMail(mailOpts, function (err, response) {
+				if (err) {
+					callback(err, false);
+				} else {
+					callback(null, true);
+				}
+			});
+		});
 	});
 }
 
@@ -162,10 +242,35 @@ router.get('/', hasPermissions, function(req, res, next) {
 router.get('/settings', isAdmin, function(req, res, next) {
 	getUsersForAdmin(res.locals.user.username, function(err, results) {
 		if (err) { return res.status(500).send(); }
-		res.render('settings', { 
+		res.render('admin-settings', { 
 			title: 'Settings',
 			userArray: removePasswords(results)
 		});
+	});
+});
+
+router.get('/userSettings', isUser, function(req, res, next) {
+	res.render('user-settings', {
+		title: 'Settings',
+		user: res.locals.user
+	});
+});
+
+// GET all possible marker icons
+router.get('/settings/icons', isAdmin, function(req, res, next) {
+	fs.readdir(process.cwd() + '/public/images/markers', function (err, files) {
+		if (err) {
+			console.log(err);
+			return res.status(500).send();
+		}
+		// Remove unwanted file names
+		for (var i = 0; i < files.length; i++) {
+			if (files[i] === '.DS_Store') {
+				files.splice(i, 1);
+			}
+		}
+		var html = jade.renderFile('./views/icons.jade', { iconArray: files });
+		res.status(200).send(html);
 	});
 });
 
@@ -184,25 +289,48 @@ router.post('/settings', isAdmin, function (req, res, next) {
 		return res.status(400).send();
 	}
 	if (typeof type === 'string' && typeof username === 'string') {
-		if (type === 'edit' || type === 'delete' || type === 'create') {
+		if (type === 'edit' || type === 'delete' || type === 'create' || type === 'reset') {
 			if (type === 'create') {
 				console.log("in create");
 				// getUsersForAdmin(adminUsername, function (err, results) {
-				// 	var html = jade.renderFile('./views/settings-user.jade', { userArray: results });
+				// 	var html = jade.renderFile('./views/admin-settings-user.jade', { userArray: removePasswords(results) });
 				// 	return res.status(200).send(html);
 				// });
 			}
-			else if (type === 'edit') {
-				console.log("in edit");
-			}
 			else {
-				console.log("in delete");
-				DB.collection('users').remove({username: username, admin: adminUsername}, 1, function (err) {
-					if (err) { return res.status(500).send(); }
-					DB.collection(adminUsername + "_checkins").remove({username: username}, function (err) {
-						if (err) { return res.status(500).send(); }
-						return res.status(200).send();
-					});
+				checkUsername(username, function(err, result) {
+					if (result) {
+						if (type === 'delete') {
+							console.log("in delete");
+							DB.collection('users').remove({ username: username, admin: adminUsername }, 1, function (err) {
+								if (err) { return res.status(500).send(); }
+								DB.collection(adminUsername + "_checkins").remove({ username: username }, function (err) {
+									if (err) { return res.status(500).send(); }
+									return res.status(200).send();
+								});
+							});
+						}
+						else if (type === 'edit') {
+							console.log('in edit');
+							res.status(200).send()
+						}
+						else {
+							console.log('in reset');
+							sendPassword(result, function (err, sent) {
+								if (err) { return res.status(500).send(); }
+								if (sent) {
+									return res.status(200).send();
+								}
+								else {
+									return res.status(500).send();
+								}
+							});
+							
+						}
+					}
+					else {
+						return res.status(400).send();
+					}
 				});
 			}
 		}

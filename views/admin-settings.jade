@@ -6,11 +6,13 @@ block content
 	#notify
 		p Content
 		input.btn.btn-primary.btn-sm(name='close', value='Close', type='button')
+	#pick-icon
+		#icon-images.col-xs-8.col-xs-offset-2
 	#admin-settings
 		p Admin Settings Coming Soon!
-		// include setings-admin.jade
+		// include admin-setings-admin.jade
 	#users
-		include settings-user.jade
+		include admin-settings-user.jade
 	#new-user-modal.modal.fade(tab-index='-1' role='dialog')
 		.modal-dialog(role='document')
 			.modal-content
@@ -31,12 +33,31 @@ block content
 						span &times;
 					h4.modal-title Edit User
 				.modal-body
-					p Stuff
+					.form-group
+						button#reset-password.btn.btn-danger.btn-block Reset Password
+					.form-group.well
+						p.centered-label User Group
+						input.form-control(name='group', type='text')
+					.form-group.well
+						p.text-center Icon
+							.icon
+								img#icon.center-block(src='/images/markers/Orange_marker.png', width='20px', height='34px')
+								button#change-icon.btn.btn-primary.center-block Choose Icon
+					.form-group
+						#emergency-info.well
+							p.text-center Emergency Contact Info
+							br
+							p.centered-label Name
+							input.form-control(name='emergency_name', type='text')
+							p.centered-label Phone Number
+							input.form-control(name='emergency_phone', type='text')
+							p.centered-label E-mail
+							input.form-control(name='emergency_email', type='email')
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close
 					button.btn.btn-success Save Changes
 	#delete-user-modal.modal.fade(tab-index='-1' role='dialog')
-		.modal-dialog.modal-sm(role='document')
+		.modal-dialog(role='document')
 			.modal-content
 				.modal-header
 					button.close(type='button' data-dismiss='modal')
@@ -49,5 +70,3 @@ block content
 				.modal-footer
 					button.btn.btn-primary(data-dismiss='modal') Close
 					button.btn.btn-danger Delete User
-	script(type='text/javascript').
-		var userData = !{JSON.stringify(userArray)};
