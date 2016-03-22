@@ -41,7 +41,14 @@ $(document).ready(function () {
 		}
 	}
 	iconRequest.send();
+	// New User
+	$('#new-user-modal').on('show.bs.modal'), function() {
+		
+	}
 	
+	$('#new-user-modal').on('hide.bs.modal'), function () {
+		
+	}
 	// Delete User
 	$('#delete-user-modal').on('show.bs.modal', function (event) {
 		var username = $(event.relatedTarget).attr('title');
@@ -132,13 +139,13 @@ $(document).ready(function () {
 		// Add listener for confirm edit button
 		$(this).find('.btn-success').on('click', function () {
 			var $modal = $('#edit-user-modal');
-			userData[index].firstName = $modal.find('input[name=first-name]').val();
-			userData[index].lastName = $modal.find('input[name=last-name]').val();
-			userData[index].userGroup = $modal.find('input[name=group]').val();
-			userData[index].icon = $('#icon').attr('src');
-			userData[index].emergencyContact.name = $modal.find('input[name=emergency_name]').val();
-			userData[index].emergencyContact.phone = $modal.find('input[name=emergency_phone]').val();
-			userData[index].emergencyContact.email = $modal.find('input[name=emergency_email]').val();
+			userData[index].firstName = $modal.find('input[name=first-name]').val().replace(/[<()>"']/g, '*');
+			userData[index].lastName = $modal.find('input[name=last-name]').val().replace(/[<()>"']/g, '*');
+			userData[index].userGroup = $modal.find('input[name=group]').val().replace(/[<()>"']/g, '*');
+			userData[index].icon = $('#icon').attr('src').replace(/[<()>"']/g, '*');
+			userData[index].emergencyContact.name = $modal.find('input[name=emergency_name]').val().replace(/[<()>"']/g, '*');
+			userData[index].emergencyContact.phone = $modal.find('input[name=emergency_phone]').val().replace(/[<()>"']/g, '*');
+			userData[index].emergencyContact.email = $modal.find('input[name=emergency_email]').val().replace(/[<()>"']/g, '*');
 			var $row = $('[title=' + username + ']').closest('tr');
 			$row.find('td:nth-child(2)').text(userData[index].firstName);
 			$row.find('td:nth-child(3)').text(userData[index].lastName);
@@ -191,6 +198,13 @@ $(document).ready(function () {
 	$(document).on('click', '#close-icon-picker', function () {
 		$('#pick-icon').fadeOut();
 		$('#pick-icon').off('click');
+	});
+	
+	// On/Off switch Checkbox toggles
+    $(document).on('click', '.onoffswitch', function() {
+		var toggleSwitch = $(this).find('input');
+		toggleSwitch.prop('checked') ? toggleSwitch.prop('checked', false) 
+			: toggleSwitch.prop('checked', true);
 	});
 	
 });

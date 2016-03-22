@@ -13,15 +13,54 @@ block content
 		// include admin-setings-admin.jade
 	#users
 		include admin-settings-user.jade
-	#new-user-modal.modal.fade(tab-index='-1' role='dialog')
+	#new-user-modal.modal.fade(tab-index='-1', role='dialog')
 		.modal-dialog(role='document')
 			.modal-content
 				.modal-header
-					button.close(type='button' data-dismiss='modal')
+					button.close(type='button', data-dismiss='modal')
 						span &times;
 					h4.modal-title Add a new user
 				.modal-body
-					p Stuff
+					.well#username
+						.form-inline
+							.pull-left
+								.form-group.has-feedback
+									label.control-label(for='new-username') username
+									input#new-username.form-control(name='new-username', type='text')
+									span.glyphicon.glyphicon-warning-sign.form-control-feedback
+							.pull-right
+								select.form-control(name="new-type")
+									option(value='user') Check In User
+									option(value='view') View Only
+					.form-group.well#info
+						p.centered-label Info
+						.form-inline
+							.pull-left
+								label First Name
+								input.form-control(name='new-first-name', type='text')
+							.pull-right
+								label Last Name
+								input.form-control(name='new-last-name', type='text')
+						.form-inline
+							.pull-left
+								label#email-label Email
+								input.form-control(name='new-email', type='email')
+							.pull-right
+								label Group
+								input.form-control(name='new-group', type='text')
+					#notification-switch.well
+						p.centered-label Overdue Notifications
+						.onoffswitch.center-block
+							input#myonffswitch.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
+							label.onoffswitch-label(for='myonoffswitch')
+								span.onoffswitch-inner
+								span.onoffswitch-switch
+						p.centered-label Check In Reminders
+						.onoffswitch.center-block
+							input#myonffswitch.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
+							label.onoffswitch-label(for='myonoffswitch')
+								span.onoffswitch-inner
+								span.onoffswitch-switch
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close
 					button.btn.btn-success Add User
@@ -33,19 +72,19 @@ block content
 						span &times;
 					h4.modal-title Edit User
 				.modal-body
-					.form-group.well#name
-						p.centered-label Name
+					#name.form-group.well
+						p.text-center Name
 						.form-inline
-							#first
+							.pull-left
 								label First
 								input.form-control(name='first-name', type='text')
-							#last
+							.pull-right
 								label Last
 								input.form-control(name='last-name', type='text')
 					.form-group
 						button#reset-password.btn.btn-danger.btn-block Reset Password
 					.form-group.well
-						p.centered-label User Group
+						p.text-center User Group
 						input.form-control(name='group', type='text')
 					.form-group.well
 						p.text-center Icon
@@ -56,11 +95,11 @@ block content
 						#emergency-info.well
 							p.text-center Emergency Contact Info
 							br
-							p.centered-label Name
+							label Name
 							input.form-control(name='emergency_name', type='text')
-							p.centered-label Phone Number
+							label Phone Number
 							input.form-control(name='emergency_phone', type='text')
-							p.centered-label E-mail
+							label E-mail
 							input.form-control(name='emergency_email', type='email')
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close

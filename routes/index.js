@@ -23,6 +23,7 @@ const MAPS_API_KEY = process.env.MAPS_API_KEY;
 const DEFAULT_ICON = "/images/markers/orange_Marker.png";
 const EMAIL_FROM_NAME = 'Tech Check Ins';
 const VALID_EDIT_PROPS = process.env.VALID_EDIT_PROPS.split(' '); // Make an array out of the string
+const VALID_SUBPROPS = process.env.VALID_SUBPROPS.split(' ');
 
 // Takes the time from the document and the current time and gets the time diff and formats the current time
 function timeFunctions (docTime, currentMoment, timezone) {
@@ -155,7 +156,7 @@ function getCheckInLatLng (tech, icon, max, timezone, collection, callback) {
 	});
 }
 
-// Make sure user is logged in when sending requests
+// Make sure user/admin is logged in when sending requests
 function hasPermissions (req, res, next) {
 	if ( req.isAuthenticated()) {
 		if (res.locals.user.account_type === 'admin' ||
@@ -310,16 +311,33 @@ router.post('/settings', isAdmin, function (req, res, next) {
 						}
 						else if (type === 'edit') {
 							console.log('in edit');
+							// Only get what we want out of the data submitted and sanitize any input
 							var newData = {};
 							for (var prop in data) {
 								if (data.hasOwnProperty(prop)) {
 									VALID_EDIT_PROPS.forEach(function (validProp) {
 										if (prop === validProp) {
-											newData[prop] = data[prop];
+											if (typeof data[prop] === 'object') {
+												newData[prop] = {};
+												for (var subprop in data[prop]) {
+													if (data[prop].hasOwnProperty(subprop)) {
+														VALID_SUBPROPS.forEach(function (validSubProp) {
+															if (subprop === validSubProp) {
+																newData[prop][subprop] = data[prop][subprop]
+																	.replace(/[<()>"']/g, '*');
+															}
+														});
+													}
+												}
+											}
+											else {
+												newData[prop] = data[prop].replace(/[<()>"']/g, '*');
+											}
 										}
 									});
 								}
 							}
+							console.log(newData);
 							DB.collection('users').updateOne({ username: username}, { $set : newData }, function (err, result) {
 								if (err) { res.status(500).send(); }
 								else {

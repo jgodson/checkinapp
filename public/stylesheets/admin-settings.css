@@ -28,7 +28,7 @@ body {
 }
 
 #delete-user-modal {
-    color: red;
+    color: darkred;
 }
 
 table {
@@ -97,17 +97,16 @@ td {
 	color: white;
 }
 
-#edit-user-modal p {
+#edit-user-modal p, #new-user-modal p {
     font-weight: bold;
-    margin-bottom: 0;
 }
 
-#edit-user-modal .centered-label {
+.centered-label {
 	text-align: center;
 	margin: 5px;
 }
 
-#edit-user-modal .well {
+.well {
 	padding: 10px;
 }
 
@@ -115,14 +114,48 @@ td {
 	min-height: 80px;
 }
 
-#name #first {
-	float: left;
+select[name='new-type'] {
+	float: none;
 }
 
-#name #last {
-	float: right;
+.glyphicon-warning-sign {
+	color: darkorange;
 }
 
-#name label {
+.glyphicon-ok {
+	color: lawngreen
+}
+
+.glyphicon-remove {
+	color: red;
+}
+
+label {
 	margin-right: 10px;
+	margin-top: 5px;
+}
+
+#username {
+    min-height: 55px;
+}
+
+#info {
+	min-height: 120px;
+}
+
+@media (max-width: 768px) {
+	.pull-left {
+		float: none !important;
+	}
+
+	.pull-right {
+		float: none !important;
+	}
+	
+}
+
+@media (min-width: 768px) {
+	#email-label {
+		margin-left: 35px;
+	}
 }
