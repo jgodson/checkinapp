@@ -9,7 +9,3 @@ block content
 		p= "Loading..."
 	#map
 	script(async defer src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY + "&callback=initMap")
-	
-block time
-	p#timeTop.time= "Last Update"
-	p#currentTime.time= "Updating..."

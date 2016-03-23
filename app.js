@@ -39,7 +39,7 @@ app.set('view engine', 'jade');
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(logger('dev'));
+app.use(logger(':date :method :url :status :response-time ms - :res[content-length]'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 

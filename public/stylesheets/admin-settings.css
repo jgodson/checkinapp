@@ -55,7 +55,7 @@ td {
 	display: none;
     position: fixed;
     top: 55px;
-    z-index: 100;
+    z-index: 9999;
     height: 80px;
     right: 5px;
     width: 200px;
@@ -70,7 +70,7 @@ td {
     margin-top: 7px;
 }
 
-#icon {
+.modal-icon {
 	margin-top: 5px;
     margin-bottom: 10px;
 }
@@ -83,6 +83,7 @@ td {
 	height: 100%;
 	z-index: 10000;
 	background-color: rgba(0, 0, 0, 0.8);
+	overflow-y: auto;
 }
 
 #icon-images img {
@@ -97,10 +98,18 @@ td {
 	color: white;
 }
 
+#close-icon-picker {
+    max-width: 250px;
+    margin-top: 20px;
+}
+
 #edit-user-modal p, #new-user-modal p {
     font-weight: bold;
 }
 
+#reset-password {
+	max-width: 250px;
+}
 .centered-label {
 	text-align: center;
 	margin: 5px;
@@ -143,7 +152,11 @@ label {
 	min-height: 120px;
 }
 
-@media (max-width: 768px) {
+#info:nth-child(2) .pull-left, #info:nth-child(2) .pull-right {
+    margin-bottom: 5px;
+}
+
+@media (max-width: 767px) {
 	.pull-left {
 		float: none !important;
 	}

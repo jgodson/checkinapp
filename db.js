@@ -3,29 +3,29 @@ const URI = process.env.MONGO_URI;
 const DB = global.DB.s.topology;
 
 DB.on('close', function () {
-	console.log('DB CLOSED EVENT');
+	console.log(Date() + ' DB CLOSED EVENT');
 });
 
 DB.on('reconnect', function () {
-	console.log('DB RECONNECT EVENT');
+	console.log(Date() + ' DB RECONNECT EVENT');
 });
 
 DB.on('error', function () {
-	console.log('DB ERROR');
+	console.log(Date() + ' DB ERROR');
 });
 
 DB.on('timeout', function () {
-	console.log('DB TIMEOUT');
+	console.log(Date() + ' DB TIMEOUT');
 });
 
 DB.on('parseError', function () {
-	console.log('DB PARSE ERROR');
+	console.log(Date() + ' DB PARSE ERROR');
 });
 
 DB.on('fullSetup', function () {
-	console.log('DB Setup');
+	console.log(Date() + ' DB Setup');
 });
 
 DB.on('all', function () {
-	console.log('DB Operation');
+	console.log(Date() + ' DB Operation');
 });

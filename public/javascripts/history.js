@@ -13,9 +13,7 @@ function query() {
 				req.setRequestHeader("Content-type", "application/json");
 				req.onreadystatechange = function(){
 					if(req.readyState == 4){
-						console.log(JSON.parse(req.responseText));
 						var results = JSON.parse(req.responseText);
-						console.log(results[name].length);
 						if (req.status === 200) {
 							if (results[name].length !== 0) {
 								deleteMarkers();

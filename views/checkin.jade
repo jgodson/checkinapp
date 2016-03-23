@@ -9,6 +9,7 @@ html
 		title= "User Check Ins"
 		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
 		link(rel='stylesheet', href='/stylesheets/font-awesome.min.css')
+		link(rel='stylesheet', href='/stylesheets/common.css')
 		link(rel='stylesheet', href='/stylesheets/checkin.css')
 		link(rel='icon', sizes='128x128', href='/apple-touch-icon.png')
 	body
@@ -23,13 +24,12 @@ html
 						.navbar-brand= user.firstName + " " + user.lastName
 					#navbar.collapse.navbar-collapse
 						ul.nav.navbar-nav
-							li(class=(title='Main' ? 'active' : ''))
+							li(class=(title === 'Main' ? 'active' : ''))
 								a(href='/app/checkin') Check Ins
-							li(class=(title='Settings' ? 'active' : ''))
-								a(href='/app/userSettings') Settings
-							if user
-								li
-									a(href='/users/logout') Log Out
+							li(class=(title === 'Settings' ? 'active' : ''))
+								a(href='/app/usersettings') Settings
+							li
+								a(href='/users/logout') Log Out
 		#topArea.col-sm-6.col-sm-offset-3.text-center
 			#warning.alert.alert-warning.full-screen
 			#success.alert.alert-success.full-screen Successfully submitted Check In!
@@ -71,7 +71,6 @@ html
 		script(src='/javascripts/jquery.min.js')
 		script(src='/javascripts/bootstrap.min.js')
 		script(src='/javascripts/moment.js')
-		script(src='/javascripts/maps.js')
 		script(async defer src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY + "&callback=initMap")
 		script(src='/javascripts/scripts.js')
 		

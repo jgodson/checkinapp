@@ -25,21 +25,25 @@ html
 						span.icon-bar
 						span.icon-bar
 						span.icon-bar
-					if user.account_type === 'admin'
-						a.settings(href='/app/settings')
-							.glyphicon.glyphicon-cog
+					a.settings(href='/app/settings')
+						.glyphicon.glyphicon-cog(class=(title === 'Settings' ? 'active' : ''))
 					.navbar-brand= "Logged in as " + user.username
 				#navbar.collapse.navbar-collapse
 					ul.nav.navbar-nav
-						li(class=(title == 'Main' ? 'active' : ''))
+						li(class=(title === 'Main' ? 'active' : ''))
 							a(href='/app') Check Ins
-						li(class=(title == 'History' ? 'active' : ''))
+						li(class=(title === 'History' ? 'active' : ''))
 							a(href='/app/history') History
-						if user
-							li
-								a(href='/admins/logout') Log Out
+						li
+							a(href='/admins/logout') Log Out
 					ul.nav.navbar-nav.navbar-right
-						block time
+						if title === 'Main'
+							p.navbar-rightside.navbar-rightside-top Last Update
+							p#currentTime.navbar-rightside= "Updating..."
+						if title === 'Settings' && user.account_type === 'admin'
+							p.navbar-rightside.navbar-rightside-top Account Balance
+							p#account-balance.navbar-rightside= "$ " + user.currentBalance.toFixed(2)
+						
 	script(src='/javascripts/moment.js')
 	script(src='/javascripts/moment-timezone-data-2020.js')
 	script(src='/javascripts/jquery.min.js')

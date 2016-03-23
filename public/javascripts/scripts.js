@@ -7,6 +7,19 @@ var $accuracy = document.getElementById('accuracy');
 var $warning = document.getElementById('warning');
 var $checkinBtn = document.getElementById('submit-checkin');
 var marker;
+var map;
+
+// Initialize map (callback from loading scripts from google)
+function initMap () {
+	var myLatLng = {lat: 53.5, lng: -108.5};
+
+	// Create a map object and specify the DOM element for display.
+	map = new google.maps.Map(document.getElementById('map'), {
+		center: myLatLng,
+		scrollwheel: false,
+		zoom: 12
+	});
+}
 
 function showLocation (loc, date) {
 	if (typeof loc === 'object') {
@@ -48,7 +61,7 @@ function submitCheckIn () {
 	req.setRequestHeader("Content-type", "application/json");
 	req.onreadystatechange = function () {
 		if (req.readyState == 4) {
-			if (req.status === 200) {
+			if (req.status === 201) {
 				$('#success').fadeIn();
 				setTimeout( function () {
 					$('#success').fadeOut();

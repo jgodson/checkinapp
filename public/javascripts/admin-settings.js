@@ -5,6 +5,7 @@ var closeEditModal = false;
 // .trim().replace(/[<()>"']/g, '*');
 
 function showRequestStatus (text, hideLoader) {
+	if (typeof hideLoader === 'undefined') { hideLoader = false; }
 	if (hideLoader) { $('#loader').fadeOut(); }
 	text.search(/error/ig) !== -1 ? $notifier.css('color', 'red') : $notifier.css('color', 'white');
 	$notifierText.text(text);
@@ -24,7 +25,6 @@ function findIndexOfUsername(username) {
 	return index;
 }
 
-
 $(document).ready(function () {
 	// Load icons for icon picker
 	var iconRequest = new XMLHttpRequest();
@@ -41,18 +41,134 @@ $(document).ready(function () {
 		}
 	}
 	iconRequest.send();
-	// New User
-	$('#new-user-modal').on('show.bs.modal'), function() {
-		
-	}
 	
-	$('#new-user-modal').on('hide.bs.modal'), function () {
+	// New User
+	$('#new-user-modal').on('show.bs.modal', function() {
+		// Event listener for changing type of user
+		$("select[name='new-type']").on('change', function () {
+			$(this).val() === 'view' ? $('.user-only').fadeOut() : $('.user-only').fadeIn();
+		});
 		
-	}
+		// Event listener for changing icon
+		$(this).find('.select-icon').on('click', function () {
+			$('#pick-icon').fadeIn();
+			// Add listener for icon click
+			$('#pick-icon').on('click', 'img', function () {
+				var picked = $(this).attr('src');
+				$('#new-user-modal .modal-icon').attr('src', picked);
+				$('#pick-icon').fadeOut();
+				$('#pick-icon').off('click');
+			});
+		});
+		
+		// Event listener for emergency email
+		$("input[name='new-emergency_email']").on('blur', function () {
+			var input = $("input[name='new-emergency_email']").val();
+			if (input.search(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$/i) === -1) {
+				$('#new-emerg-email-feedback').removeClass('glyphicon-ok')
+					.addClass('glyphicon-remove');
+			}
+			else {
+				$('#new-emerg-email-feedback').removeClass('glyphicon-remove')
+					.addClass('glyphicon-ok');
+			}
+		});
+		
+		// Event listener for clicking the Add User button
+		$(this).find('.btn-success').on('click', function () {
+			$modal = $('#new-user-modal');
+			var newUsername = $("input[name='new-username']").val().trim();
+			var newEmail = $("input[name='new-email']").val().trim();
+			if (newUsername === '') {
+				showRequestStatus("Error: Invalid username");
+				$('#username-feedback').removeClass('glyphicon-ok')
+					.addClass('glyphicon-remove');
+				return
+			}
+			else {
+				$('#username-feedback').removeClass('glyphicon-remove glyphicon-ok');
+			}
+			if (newEmail === '' || newEmail.search(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$/i) === -1) {
+				showRequestStatus("Error: Invalid email");
+				$('#email-feedback').removeClass('glyphicon-ok')
+					.addClass('glyphicon-remove');
+				return
+			}
+			else {
+				$('#email-feedback').removeClass('glyphicon-remove glyphicon-ok');
+			}
+			var newUser = {
+				username:  newUsername,
+				account_type: $("select[name='new-type']").val().trim(),
+				firstName: $("input[name='new-first-name']").val().trim(),
+				lastName: $("input[name='new-last-name']").val().trim(),
+				email: newEmail,
+				userGroup: $("input[name='new-group']").val().trim(),
+				reminders: $("#checkin-reminders").val().trim(),
+				notifications: $("#overdue").val().trim(),
+				icon: $modal.find('.modal-icon').attr('src'),
+				emergencyContact: {
+					name: $("input[name='new-emergency_name']").val().trim(),
+					phone: $("input[name='new-emergency_phone']").val().trim(),
+					email: $("input[name='new-emergency_email']").val().trim()
+				}
+			}
+			console.log(newUser);
+			$('#loader').fadeIn();
+			var req = new XMLHttpRequest();
+			req.open("POST","/app/settings/", true);
+			req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			req.onreadystatechange = function () {
+				if (req.readyState === 4){
+					if (req.status === 201) { 
+						$('#new-user-modal').modal('hide');
+						showRequestStatus('User created!', true);
+						document.getElementById('users').innerHTML = req.responseText;
+					}
+					else if (req.status === 205) {
+						$('#new-user-modal').modal('hide');
+						showRequestStatus('User created! Refresh page.', true);
+					}
+					else if (req.status === 400) {
+						if (req.responseText) {
+							console.log(req.responseText);
+							response = JSON.parse(req.reponseText);
+							if (response.error) {
+								showRequestStatus('Error: ' + response.error, true);
+								if (response.error === 'email') {
+									$('#email-feedback').addClass('glyphicon-remove');
+								}
+								else {
+									$('#username-feedback').addClass('glyphicon-remove');
+								}	
+							}
+						}
+						else {
+							showRequestStatus('Error: Bad Request', true);
+						}
+					}
+					else {
+						showRequestStatus('Error: Unknown Error', true);
+					}
+				}
+			}
+			req.send(JSON.stringify({ type: 'create', data: newUser }));
+		});
+	});
+	
+	// Remove event listeners on close
+	$('#new-user-modal').on('hide.bs.modal', function () {
+		$("select[name='new-type']").off('change');
+		$(this).find('.select-icon').off('click');
+		$(this).find('.btn-success').off('click');
+		$("input[name='new-emergency_email']").off('blur');
+	});
+	
 	// Delete User
 	$('#delete-user-modal').on('show.bs.modal', function (event) {
 		var username = $(event.relatedTarget).attr('title');
 		$(this).find('.modal-title').text("Deleting user " + username);
+		
 		// Add listener for confirm deletion button
 		$(this).find('.btn-danger').on('click', function () {
 			$('#delete-user-modal').modal('hide');
@@ -93,16 +209,46 @@ $(document).ready(function () {
 		index = findIndexOfUsername(username);
 		if (index === -1) {
 			closeEditModal = true;
-			showRequestStatus('Error: Could not find user', false);
+			showRequestStatus('Error: Could not find user');
 			return;
 		}
 		$(this).find('input[name=first-name]').val(userData[index].firstName);
 		$(this).find('input[name=last-name]').val(userData[index].lastName);
 		$(this).find('input[name=group]').val(userData[index].userGroup);
-		$('#icon').attr('src', userData[index].icon);
-		$(this).find('input[name=emergency_name]').val(userData[index].emergencyContact.name);
-		$(this).find('input[name=emergency_phone]').val(userData[index].emergencyContact.phone);
-		$(this).find('input[name=emergency_email]').val(userData[index].emergencyContact.email);
+		// Check the type of user and show/hide divs if needed
+		if (userData[index].account_type === 'user') {
+			$(this).find('.modal-icon').attr('src', userData[index].icon);
+			$(this).find('input[name=emergency_name]').val(userData[index].emergencyContact.name);
+			$(this).find('input[name=emergency_phone]').val(userData[index].emergencyContact.phone);
+			$(this).find('input[name=emergency_email]').val(userData[index].emergencyContact.email);
+			if (userData[index].emergencyContact.email
+					.search(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$/i) === -1) {
+				$('#emerg-email-feedback').removeClass('glyphicon-ok')
+					.addClass('glyphicon-remove');
+			}
+			else {
+				$('#emerg-email-feedback').removeClass('glyphicon-remove')
+					.addClass('glyphicon-ok');
+			}
+			$(this).find('.user-only').show();
+		}
+		else {
+			$(this).find('.user-only').hide();
+		}
+		
+		// Add listener for emergency email check
+		$("input[name='emergency_email']").on('blur', function () {
+			var input = $("input[name='emergency_email']").val();
+			if (input.search(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$/i) === -1) {
+				$('#emerg-email-feedback').removeClass('glyphicon-ok')
+					.addClass('glyphicon-remove');
+			}
+			else {
+				$('#emerg-email-feedback').removeClass('glyphicon-remove')
+					.addClass('glyphicon-ok');
+			}
+		});
+		
 		// Add listener for reset password button
 		$(this).find('#reset-password').on('click', function() {
 			$('#edit-user-modal').modal('hide');
@@ -125,24 +271,26 @@ $(document).ready(function () {
 			}
 			req.send(JSON.stringify({ type: 'reset', username: username }));
 		});
+		
 		// Add listener for change icon button
-		$(this).find('#change-icon').on('click', function () {
+		$(this).find('.select-icon').on('click', function () {
 			$('#pick-icon').fadeIn();
 			// Add listener for icon click
 			$('#pick-icon').on('click', 'img', function () {
 				var picked = $(this).attr('src');
-				$('#icon').attr('src', picked);
+				$('#edit-user-modal .modal-icon').attr('src', picked);
 				$('#pick-icon').fadeOut();
 				$('#pick-icon').off('click');
 			});
 		});
+		
 		// Add listener for confirm edit button
 		$(this).find('.btn-success').on('click', function () {
 			var $modal = $('#edit-user-modal');
 			userData[index].firstName = $modal.find('input[name=first-name]').val().replace(/[<()>"']/g, '*');
 			userData[index].lastName = $modal.find('input[name=last-name]').val().replace(/[<()>"']/g, '*');
 			userData[index].userGroup = $modal.find('input[name=group]').val().replace(/[<()>"']/g, '*');
-			userData[index].icon = $('#icon').attr('src').replace(/[<()>"']/g, '*');
+			userData[index].icon = $modal.find('.modal-icon').attr('src').replace(/[<()>"']/g, '*');
 			userData[index].emergencyContact.name = $modal.find('input[name=emergency_name]').val().replace(/[<()>"']/g, '*');
 			userData[index].emergencyContact.phone = $modal.find('input[name=emergency_phone]').val().replace(/[<()>"']/g, '*');
 			userData[index].emergencyContact.email = $modal.find('input[name=emergency_email]').val().replace(/[<()>"']/g, '*');
@@ -175,9 +323,9 @@ $(document).ready(function () {
 	// Cancel Edit User
 	$('#edit-user-modal').on('hide.bs.modal', function () {
 		$(this).find('.btn-success').off('click');
-		$(this).find('#change-icon').off('click');
+		$(this).find('.select-icon').off('click');
 		$(this).find('#reset-password').off('click');
-		$('#pick-icon').off('click');
+		$("input[name='emergency_email']").off('blur');
 	});
 	
 	// Close edit user modal when loaded if it has been set to be closed

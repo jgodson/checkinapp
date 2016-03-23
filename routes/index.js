@@ -10,7 +10,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt-nodejs');
 
 // Set up nodemailer
-var smtpConfig = {
+const SMTP_CONFIG = {
 	service: process.env.NODEMAILER_SERVICE,
     auth: {
         user: process.env.NODEMAILER_USER,
@@ -22,8 +22,14 @@ var smtpConfig = {
 const MAPS_API_KEY = process.env.MAPS_API_KEY;
 const DEFAULT_ICON = "/images/markers/orange_Marker.png";
 const EMAIL_FROM_NAME = 'Tech Check Ins';
-const VALID_EDIT_PROPS = process.env.VALID_EDIT_PROPS.split(' '); // Make an array out of the string
+const VALID_ADMIN_USER_EDIT_PROPS = process.env.VALID_ADMIN_USER_EDIT_PROPS.split(' '); // Make an array out of the string
+const VALID_ADMIN_VIEW_EDIT_PROPS = process.env.VALID_ADMIN_VIEW_EDIT_PROPS.split(' ');
+const VALID_USER_NEW_PROPS = process.env.VALID_USER_NEW_PROPS.split(' ').concat(VALID_ADMIN_USER_EDIT_PROPS);
+const VALID_VIEW_NEW_PROPS = process.env.VALID_VIEW_NEW_PROPS.split(' ');
 const VALID_SUBPROPS = process.env.VALID_SUBPROPS.split(' ');
+const VALID_USER_EDIT_PROPS = process.env.VALID_USER_EDIT_PROPS.split(' ');
+const VALID_VIEW_EDIT_PROPS = process.env.VALID_VIEW_EDIT_PROPS.split(' ');
+const VALID_ADMIN_EDIT_PROPS = process.env.VALID_ADMIN_EDIT_PROPS.split(' ');
 
 // Takes the time from the document and the current time and gets the time diff and formats the current time
 function timeFunctions (docTime, currentMoment, timezone) {
@@ -48,6 +54,10 @@ function timeFunctions (docTime, currentMoment, timezone) {
 function getUsersForAdmin (adminName, callback) {
 	DB.collection('users').find({admin: adminName}).toArray(function (err, results) {
 		if (err) { return callback(err); }
+		results.sort(function(a, b) {
+			if (a.username > b.username) {return 1;}
+			else {return -1;}
+		});
 		callback(null, results);
 	});
 }
@@ -60,12 +70,84 @@ function removePasswords (arrayOfUsers) {
 	return arrayOfUsers;
 } 
 
-// Check if username is taken
+// Check if username belongs to admin (and return user)
 function checkUsername (username, admin, callback) {
-	DB.collection('users').findOne({ username: username, admin: admin}, function (err, result) {
+	DB.collection('users').findOne({ username: username, admin: admin }, function (err, result) {
 		if (err) { return callback(err); }
 		return callback(null, result);
 	});
+}
+
+// Checks wether a username/email are taken. Returns what is taken or null if not taken
+function checkIfTaken (username, email, callback) {
+	DB.collection('users').findOne({ username: username }, function (err, result) {
+		if (err) { return callback(err); }
+		if (result) { return callback(null, 'username'); }
+		DB.collection('users').findOne({ email: email }, function (err, result) {
+			if (err) { return callback(err); }
+			if (result) { return callback(null, 'email'); }
+			callback(null, null);
+		});
+	});
+}
+
+// Only get what we want out of the data submitted and sanitize any input
+function filterProps (dirtyObj, filterType) {
+	// Do some validation
+	if (typeof dirtyObj !== 'object') {
+		return new Error('First paramater must be an object');
+	}
+	if (filterType === 'admin-user-edit' ) {
+		var validPropList = VALID_ADMIN_USER_EDIT_PROPS;
+	}
+	else if (filterType === 'admin-view-edit') {
+		var validPropList = VALID_ADMIN_VIEW_EDIT_PROPS;
+	}
+	else if (filterType === 'admin-edit') {
+		var validPropList = '';
+	}
+	else if (filterType === 'user-edit') {
+		var validPropList = '';
+	} 
+	else if (filterType === 'view-edit') {
+		var validPropList = '';
+	}
+	else if (filterType === 'create-view-user') {
+		var validPropList = VALID_VIEW_NEW_PROPS;
+	}
+	else if (filterType === 'create-user') {
+		var validPropList = VALID_USER_NEW_PROPS
+	}
+	else {
+		return new Error('Must specify a valid filter type');
+	}
+	// Do the filtering
+	var cleanObj = {};
+	for (var prop in dirtyObj) {
+		if (dirtyObj.hasOwnProperty(prop)) {
+			validPropList.forEach(function (validProp) {
+				if (prop === validProp) {
+					if (typeof dirtyObj[prop] === 'object') {
+						cleanObj[prop] = {};
+						for (var subprop in dirtyObj[prop]) {
+							if (dirtyObj[prop].hasOwnProperty(subprop)) {
+								VALID_SUBPROPS.forEach(function (validSubProp) {
+									if (subprop === validSubProp) {
+										cleanObj[prop][subprop] = dirtyObj[prop][subprop]
+											.trim().replace(/[<()>"']/g, '*');
+									}
+								});
+							}
+						}
+					}
+					else {
+						cleanObj[prop] = dirtyObj[prop].trim().replace(/[<()>"']/g, '*');
+					}
+				}
+			});
+		}
+	}
+	return cleanObj;
 }
 
 function genPassword(desiredLength) {
@@ -124,7 +206,7 @@ function sendPassword(user, isNew, callback) {
 				};
 			}
 		
-			var transporter = nodemailer.createTransport(smtpConfig);
+			var transporter = nodemailer.createTransport(SMTP_CONFIG);
 
 			transporter.sendMail(mailOpts, function (err, response) {
 				if (err) { callback(err, false); } 
@@ -147,6 +229,9 @@ function getCheckInLatLng (tech, icon, max, timezone, collection, callback) {
 	DB.collection( collection + "_checkins" ).find({ username: tech }, { _id: 0, name: 1, message: 1, timestamp: 1, location: 1 })
 	.sort({_id: -1}).limit( max ).toArray(function (err, results) {
 		if (err) { return callback(err); }
+		if (results.length === 0) {
+			return callback(null, undefined);
+		}
 		results.forEach(function (result) {
 			result.timestamp = moment(result.timestamp, 'ddd, MMM Do YYYY, h:mm:ss a Z', 'en');
 			result.timestamp = momentTZ.tz(result.timestamp, timezone).format("ddd, MMM Do YYYY, h:mm:ss a");
@@ -156,7 +241,7 @@ function getCheckInLatLng (tech, icon, max, timezone, collection, callback) {
 	});
 }
 
-// Make sure user/admin is logged in when sending requests
+// Make sure view/admin user is logged in
 function hasPermissions (req, res, next) {
 	if ( req.isAuthenticated()) {
 		if (res.locals.user.account_type === 'admin' ||
@@ -171,6 +256,7 @@ function hasPermissions (req, res, next) {
 	return res.redirect('/admins/login');
 }
 
+// Make sure a user is logged in (checkins/edit settings only)
 function isUser (req, res, next) {
 	if (req.isAuthenticated()) {
 		if (res.locals.user.account_type === 'user') {
@@ -183,6 +269,7 @@ function isUser (req, res, next) {
 	return res.redirect('/users/login');
 }
 
+// Make sure an admin is logged in
 function isAdmin (req, res, next) {
 	if (req.isAuthenticated()) {
 		if (res.locals.user.account_type === 'admin') {
@@ -202,6 +289,7 @@ router.get('/checkin', isUser, function (req, res, next) {
 	});
 });
 
+// Submit a checkin for user
 router.post('/checkin', isUser, function (req, res, next) {
 	var checkin = req.body;
 	// Validate received input
@@ -224,13 +312,13 @@ router.post('/checkin', isUser, function (req, res, next) {
 	checkin.name = res.locals.user.firstName + " " + res.locals.user.lastName
 	checkin.username = res.locals.user.username;
 	checkin.created_At = moment().utc().toString();
-	DB.collection(res.locals.user.admin + "_checkins").insertOne(checkin, function (err, checkin) {
+	DB.collection(res.locals.user.admin + "_checkins").insertOne(checkin, function (err) {
 		if (err) { return res.status(500).send(); }
-		return res.status(200).send();
+		return res.status(201).send();
 	});
 });
 
-/* GET home page. */
+// Main app
 router.get('/', hasPermissions, function(req, res, next) {
  	res.render('index', {	
 		title: 'Main', 
@@ -238,6 +326,7 @@ router.get('/', hasPermissions, function(req, res, next) {
 	});
 });
 
+// Admin Settings
 router.get('/settings', isAdmin, function(req, res, next) {
 	getUsersForAdmin(res.locals.user.username, function(err, results) {
 		if (err) { return res.status(500).send(); }
@@ -248,6 +337,7 @@ router.get('/settings', isAdmin, function(req, res, next) {
 	});
 });
 
+// User Settings
 router.get('/userSettings', isUser, function(req, res, next) {
 	res.render('user-settings', {
 		title: 'Settings',
@@ -255,7 +345,7 @@ router.get('/userSettings', isUser, function(req, res, next) {
 	});
 });
 
-// GET all possible marker icons
+// Returns all possible marker icons
 router.get('/settings/icons', isAdmin, function(req, res, next) {
 	fs.readdir(process.cwd() + '/public/images/markers', function (err, files) {
 		if (err) {
@@ -273,12 +363,27 @@ router.get('/settings/icons', isAdmin, function(req, res, next) {
 	});
 });
 
+// Edit settings/user/create new users
 router.post('/settings', isAdmin, function (req, res, next) {
-	var username = req.body.username.trim().replace(/[<()>"']/g, '*');
-	var type = req.body.type;
+	var username;
+	var type;
+	var data;
+	if (typeof req.body.username === 'string') {
+		username = req.body.username.trim().replace(/[<()>"']/g, '*').toLowerCase();
+	}
+	if (typeof req.body.type === 'string') {
+		type = req.body.type;
+	}
+	else {
+		return res.status(400).send();
+	}
 	var adminUsername = res.locals.user.username;
 	if (typeof req.body.data === 'object') {
-		var data = req.body.data;
+		data = req.body.data;
+		console.log(data.username)
+		if (!username && typeof data.username === 'string') {
+			username = data.username.trim().replace(/[<()>"']/g, '*').toLowerCase();
+		}
 	}
 	console.log("Type: " + type);
 	console.log("Username: " + username);
@@ -287,14 +392,59 @@ router.post('/settings', isAdmin, function (req, res, next) {
 		console.log("username equal");
 		return res.status(400).send();
 	}
-	if (typeof type === 'string' && typeof username === 'string') {
+	if (typeof username === 'string') {
 		if (type === 'edit' || type === 'delete' || type === 'create' || type === 'reset') {
 			if (type === 'create') {
 				console.log("in create");
-				// getUsersForAdmin(adminUsername, function (err, results) {
-				// 	var html = jade.renderFile('./views/admin-settings-user.jade', { userArray: removePasswords(results) });
-				// 	return res.status(200).send(html);
-				// });
+				// Make sure we have data object
+				if (!data) {
+					return res.status(400).send();
+				}
+				if (typeof data.username !== 'string' || typeof data.email !== 'string' ||
+					typeof data.account_type !== 'string' || typeof data.firstName !== 'string' ||
+					typeof data.icon !== 'string') {
+						return res.status(400).send();
+					}
+				var newData;
+				if (data.account_type === 'user') {
+					newData = filterProps(data, 'create-user');
+				}
+				else if (data.account_type === 'view') {
+					newData = filterProps(data, 'create-view-user');
+				}
+				else {
+					return res.status(400).send();
+				}
+				checkIfTaken(newData.username, newData.email, function (err, result) {
+					if (err) { return res.status(500).send(); }
+					if (result) {
+						res.writeHead(400, "Bad Request", { "Content-Type":"application/json" } );
+						return res.end(JSON.stringify( {error: result + ' already exists'} )); 
+					}
+					newData.created_at = moment().utc().toString();
+					console.log(newData.created_at);
+					newData.admin = adminUsername;
+					DB.collection('users').insertOne(newData, function (err) {
+						if (err) { return res.status(500).send(); }
+						sendPassword(newData, true, function (err, result) {
+							if (err) {
+								DB.collection('users').remove({ username: newData.username }, 1, function (err) {
+									return res.status(500).send();
+								});
+							}
+							else {
+								getUsersForAdmin(adminUsername, function (err, results) {
+									if (err) { return res.status(205).send(); }
+									var html = jade.renderFile('./views/admin-settings-user.jade', { 
+										userArray: removePasswords(results) 
+									});
+									res.writeHead(201, "Created", { "Content-Type":"text/html" } );
+									res.end(html);
+								});
+							}
+						});
+					});
+				});
 			}
 			else {
 				checkUsername(username, adminUsername, function(err, result) {
@@ -311,40 +461,29 @@ router.post('/settings', isAdmin, function (req, res, next) {
 						}
 						else if (type === 'edit') {
 							console.log('in edit');
-							// Only get what we want out of the data submitted and sanitize any input
-							var newData = {};
-							for (var prop in data) {
-								if (data.hasOwnProperty(prop)) {
-									VALID_EDIT_PROPS.forEach(function (validProp) {
-										if (prop === validProp) {
-											if (typeof data[prop] === 'object') {
-												newData[prop] = {};
-												for (var subprop in data[prop]) {
-													if (data[prop].hasOwnProperty(subprop)) {
-														VALID_SUBPROPS.forEach(function (validSubProp) {
-															if (subprop === validSubProp) {
-																newData[prop][subprop] = data[prop][subprop]
-																	.replace(/[<()>"']/g, '*');
-															}
-														});
-													}
-												}
-											}
-											else {
-												newData[prop] = data[prop].replace(/[<()>"']/g, '*');
-											}
-										}
-									});
-								}
+							// Make sure we have data object
+							if (!data) {
+								res.status(400).send();
+							}
+							// Get only the props we need out of the data submitted
+							var newData;
+							if (result.account_type === 'user') {
+								newData = filterProps(data, 'admin-user-edit');
+							}
+							else if (result.account_type === 'view') {
+								newData = filterProps(data, 'view-user-edit');
+							}
+							else {
+								return res.status(500).send();
 							}
 							console.log(newData);
 							DB.collection('users').updateOne({ username: username}, { $set : newData }, function (err, result) {
-								if (err) { res.status(500).send(); }
+								if (err) { return res.status(500).send(); }
 								else {
 									var newName = newData.firstName + " " + newData.lastName;
 									DB.collection(adminUsername + '_checkins').updateMany({ username: username }
 									, { $set: { name : newName }}, function (err, result) {
-										if (err) { res.status(500).send(); }
+										if (err) { return res.status(500).send(); }
 										else { res.status(200).send(); }
 									});
 								}
@@ -361,7 +500,7 @@ router.post('/settings', isAdmin, function (req, res, next) {
 						}
 					}
 					else {
-						return res.status(400).send();
+						res.status(400).send();
 					}
 				});
 			}
@@ -412,6 +551,11 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 	var currentMoment = moment();
 	DB.collection('users').find( { admin: res.locals.user.username }, { _id: 0, username: 1 }).toArray(function (err, results) {
 		if (err) { return res.status(500).send(); }
+		if (results.length === 0 ) {
+			var html = "<p id='no-results'>You have no users, please add them on the settings page (Gear Icon above)!</p>";
+			res.writeHead(200,"OK",{"Content-Type":"text/html"});
+			return res.end(html);
+		}
 		var numTechs = results.length;
 		results.forEach(function(tech) {
 			getDocsFromTech(tech.username, res.locals.user.username, function(err, results) {
@@ -425,18 +569,18 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 					numTechs--;
 				}
 				if (numTechs === 0) {
+					if (techArray.length === 0 ) {
+						var html = "<p id='no-results'>No active users, your users will appear here after they have at"
+						+ " least one Check In.</p>";
+						res.writeHead(200,"OK",{"Content-Type":"text/html"});
+						return res.end(html);
+					}
 					// Sort array so that it doesn't change around
-					techArray = techArray.sort(function(a, b) {
+					techArray.sort(function(a, b) {
 						if (a.name > b.name) {return 1;}
 						else {return -1;}
 					});
-					if (techArray.length === 0 ) {
-						var html = "No active users, your users will appear here after they have at least one Check In."
-						+ " If you have no users, please add them on the settings page (Gear Icon above)!";
-					}
-					else {
-						var html = jade.renderFile('./views/techList.jade', { techArray: techArray });
-					}
+					var html = jade.renderFile('./views/techList.jade', { techArray: techArray });
 					res.writeHead(200,"OK",{"Content-Type":"text/html"});
 					res.end(html);
 				}
@@ -452,10 +596,13 @@ router.get('/updateMap', hasPermissions, function(req, res, next) {
 	DB.collection('users').find({ admin: res.locals.user.username }, { _id : 0, icon: 1, username: 1 })
 	.toArray(function (err, results) {
 		if (err) {return res.status(500).send();}
+		if (results.length === 0 ) {
+			return res.status(204).send();
+		}
 		var numTechs = results.length;
 		results.forEach(function(tech) {
 			getCheckInLatLng(tech.username, tech.icon, 5, timezone, res.locals.user.username, function(err, results) {
-				if (err) {return res.status(500).send();}
+				if (err) { return res.status(500).send(); }
 				if (results !== undefined) {
 					coordinates[tech.username] = results;
 					numTechs--;
@@ -464,6 +611,9 @@ router.get('/updateMap', hasPermissions, function(req, res, next) {
 					numTechs--;
 				}
 				if (numTechs === 0) {
+					if (Object.keys(coordinates).length === 0 ) {
+						return res.status(204).send();
+					}
 					res.writeHead(200,"OK",{"Content-Type":"application/json"});
 					res.end(JSON.stringify(coordinates));
 				}

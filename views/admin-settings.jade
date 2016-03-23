@@ -7,7 +7,7 @@ block content
 		p Content
 		input.btn.btn-primary.btn-sm(name='close', value='Close', type='button')
 	#pick-icon
-		#icon-images.col-xs-8.col-xs-offset-2
+		#icon-images.col-xs-12.col-sm-8.col-sm-offset-2
 	#admin-settings
 		p Admin Settings Coming Soon!
 		// include admin-setings-admin.jade
@@ -25,9 +25,9 @@ block content
 						.form-inline
 							.pull-left
 								.form-group.has-feedback
-									label.control-label(for='new-username') username
-									input#new-username.form-control(name='new-username', type='text')
-									span.glyphicon.glyphicon-warning-sign.form-control-feedback
+									label username
+									input.form-control(name='new-username', type='text')
+									span#username-feedback.glyphicon.form-control-feedback
 							.pull-right
 								select.form-control(name="new-type")
 									option(value='user') Check In User
@@ -37,30 +37,48 @@ block content
 						.form-inline
 							.pull-left
 								label First Name
-								input.form-control(name='new-first-name', type='text')
+								input.form-control(name='new-first-name', type='text' required)
 							.pull-right
 								label Last Name
 								input.form-control(name='new-last-name', type='text')
 						.form-inline
 							.pull-left
-								label#email-label Email
-								input.form-control(name='new-email', type='email')
+								.form-group.has-feedback
+									label#email-label Email
+									input.form-control(name='new-email', type='email' required)
+									span#email-feedback.glyphicon.form-control-feedback
 							.pull-right
 								label Group
 								input.form-control(name='new-group', type='text')
 					#notification-switch.well
 						p.centered-label Overdue Notifications
 						.onoffswitch.center-block
-							input#myonffswitch.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
+							input#overdue.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
 							label.onoffswitch-label(for='myonoffswitch')
 								span.onoffswitch-inner
 								span.onoffswitch-switch
-						p.centered-label Check In Reminders
-						.onoffswitch.center-block
-							input#myonffswitch.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
+						p.centered-label.user-only Check In Reminders
+						.onoffswitch.center-block.user-only
+							input#checkin-reminders.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
 							label.onoffswitch-label(for='myonoffswitch')
 								span.onoffswitch-inner
 								span.onoffswitch-switch
+					.form-group.well.user-only
+						p.text-center Icon
+							.icon
+								img.modal-icon.center-block(src='/images/markers/Orange_marker.png', width='20px', height='34px')
+								button.select-icon.btn.btn-primary.center-block Choose Icon
+					.form-group.well.user-only
+						p.text-center Emergency Contact Info
+						br
+						label Name
+						input.form-control(name='new-emergency_name', type='text')
+						label Phone Number
+						input.form-control(name='new-emergency_phone', type='text')
+						.form-group.has-feedback
+							label E-mail
+							input.form-control(name='new-emergency_email', type='email')
+							span#new-emerg-email-feedback.glyphicon.form-control-feedback
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close
 					button.btn.btn-success Add User
@@ -77,30 +95,31 @@ block content
 						.form-inline
 							.pull-left
 								label First
-								input.form-control(name='first-name', type='text')
+								input.form-control(name='first-name', type='text' required)
 							.pull-right
 								label Last
-								input.form-control(name='last-name', type='text')
-					.form-group
-						button#reset-password.btn.btn-danger.btn-block Reset Password
+								input.form-control(name='last-name', type='text' required)
+					.form-group.well
+						button#reset-password.btn.btn-warning.btn-block.center-block Reset Password
 					.form-group.well
 						p.text-center User Group
 						input.form-control(name='group', type='text')
-					.form-group.well
+					.form-group.well.user-only
 						p.text-center Icon
 							.icon
-								img#icon.center-block(src='/images/markers/Orange_marker.png', width='20px', height='34px')
-								button#change-icon.btn.btn-primary.center-block Choose Icon
-					.form-group
-						#emergency-info.well
-							p.text-center Emergency Contact Info
-							br
-							label Name
-							input.form-control(name='emergency_name', type='text')
-							label Phone Number
-							input.form-control(name='emergency_phone', type='text')
+								img.modal-icon.center-block(src='/images/markers/Orange_marker.png', width='20px', height='34px')
+								button.select-icon.btn.btn-primary.center-block Choose Icon
+					.form-group.well.user-only
+						p.text-center Emergency Contact Info
+						br
+						label Name
+						input.form-control(name='emergency_name', type='text')
+						label Phone Number
+						input.form-control(name='emergency_phone', type='text')
+						.form-group.has-feedback
 							label E-mail
 							input.form-control(name='emergency_email', type='email')
+							span#emerg-email-feedback.glyphicon.form-control-feedback
 				.modal-footer
 					button.btn.btn-danger(data-dismiss='modal') Close
 					button.btn.btn-success Save Changes
