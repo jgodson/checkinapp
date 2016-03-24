@@ -22,14 +22,14 @@ const SMTP_CONFIG = {
 const MAPS_API_KEY = process.env.MAPS_API_KEY;
 const DEFAULT_ICON = "/images/markers/orange_Marker.png";
 const EMAIL_FROM_NAME = 'Tech Check Ins';
-const VALID_ADMIN_USER_EDIT_PROPS = process.env.VALID_ADMIN_USER_EDIT_PROPS.split(' '); // Make an array out of the string
-const VALID_ADMIN_VIEW_EDIT_PROPS = process.env.VALID_ADMIN_VIEW_EDIT_PROPS.split(' ');
-const VALID_USER_NEW_PROPS = process.env.VALID_USER_NEW_PROPS.split(' ').concat(VALID_ADMIN_USER_EDIT_PROPS);
-const VALID_VIEW_NEW_PROPS = process.env.VALID_VIEW_NEW_PROPS.split(' ');
-const VALID_SUBPROPS = process.env.VALID_SUBPROPS.split(' ');
-const VALID_USER_EDIT_PROPS = process.env.VALID_USER_EDIT_PROPS.split(' ');
-const VALID_VIEW_EDIT_PROPS = process.env.VALID_VIEW_EDIT_PROPS.split(' ');
-const VALID_ADMIN_EDIT_PROPS = process.env.VALID_ADMIN_EDIT_PROPS.split(' ');
+const VALID_ADMIN_USER_EDIT_PROPS = "firstName lastName userGroup icon emergencyContact".split(' '); // Make an array out of the string
+const VVALID_ADMIN_VIEW_EDIT_PROPS = "firstName lastName userGroup".split(' ');
+const VALID_USER_NEW_PROPS = "username email account_type notifications reminders".split(' ').concat(VALID_ADMIN_USER_EDIT_PROPS);
+const VALID_VIEW_NEW_PROPS = "username firstName lastName userGroup email account_type notifications".split(' ');
+const VALID_SUBPROPS = "name phone email".split(' ');
+const VALID_USER_EDIT_PROPS = 'notifications reminders'.split(' ');
+const VALID_VIEW_EDIT_PROPS = 'notifications';
+const VALID_ADMIN_EDIT_PROPS = '';
 
 // Takes the time from the document and the current time and gets the time diff and formats the current time
 function timeFunctions (docTime, currentMoment, timezone) {
