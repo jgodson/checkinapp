@@ -104,8 +104,8 @@ $(document).ready(function () {
 				lastName: $("input[name='new-last-name']").val().trim(),
 				email: newEmail,
 				userGroup: $("input[name='new-group']").val().trim(),
-				reminders: $("#checkin-reminders").val().trim(),
-				notifications: $("#overdue").val().trim(),
+				reminders: ('#checkin-reminders').prop('checked'),
+				notifications: ('#overdue').prop('checked'),
 				icon: $modal.find('.modal-icon').attr('src'),
 				emergencyContact: {
 					name: $("input[name='new-emergency_name']").val().trim(),
@@ -113,17 +113,23 @@ $(document).ready(function () {
 					email: $("input[name='new-emergency_email']").val().trim()
 				}
 			}
-			console.log(newUser);
 			$('#loader').fadeIn();
 			var req = new XMLHttpRequest();
 			req.open("POST","/app/settings/", true);
 			req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 			req.onreadystatechange = function () {
 				if (req.readyState === 4){
-					if (req.status === 201) { 
+					if (req.status === 201) {
+						var newUserResponse = JSON.parse(req.responseText);
+						console.log(newUserResponse);
 						$('#new-user-modal').modal('hide');
+						$("input[name='new-username']").val('');
+						$("input[name='new-email']").val('');
+						$("input[name='new-first-name']").val('');
+						$("input[name='new-last-name']").val('');
 						showRequestStatus('User created!', true);
-						document.getElementById('users').innerHTML = req.responseText;
+						document.getElementById('users').innerHTML = newUserResponse.html;
+						userData = newUserResponse.data;
 					}
 					else if (req.status === 205) {
 						$('#new-user-modal').modal('hide');
@@ -131,16 +137,27 @@ $(document).ready(function () {
 					}
 					else if (req.status === 400) {
 						if (req.responseText) {
-							console.log(req.responseText);
-							response = JSON.parse(req.reponseText);
+							var response = JSON.parse(req.responseText);
 							if (response.error) {
-								showRequestStatus('Error: ' + response.error, true);
-								if (response.error === 'email') {
+								if (response.error.username && response.error.email) {
+									showRequestStatus('Error: username & email already exist', true);
+									$('#username-feedback').removeClass('glyphicon-ok');
+									$('#username-feedback').removeClass('glyphicon-ok');
 									$('#email-feedback').addClass('glyphicon-remove');
-								}
-								else {
 									$('#username-feedback').addClass('glyphicon-remove');
-								}	
+								}
+								else if (response.error.email) {
+									showRequestStatus('Error: email already exists', true);
+									$('#email-feedback').addClass('glyphicon-remove');
+									$('#username-feedback').removeClass('glyphicon-remove');
+									$('#username-feedback').addClass('glyphicon-ok');
+								}
+								else if (response.error.username) {
+									showRequestStatus('Error: username already exists', true);
+									$('#username-feedback').addClass('glyphicon-remove');
+									$('#email-feedback').removeClass('glyphicon-remove');
+									$('#email-feedback').addClass('glyphicon-ok');
+								}
 							}
 						}
 						else {

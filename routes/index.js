@@ -80,13 +80,17 @@ function checkUsername (username, admin, callback) {
 
 // Checks wether a username/email are taken. Returns what is taken or null if not taken
 function checkIfTaken (username, email, callback) {
+	var errors = {};
 	DB.collection('users').findOne({ username: username }, function (err, result) {
 		if (err) { return callback(err); }
-		if (result) { return callback(null, 'username'); }
+		if (result) { errors.username = true; }
 		DB.collection('users').findOne({ email: email }, function (err, result) {
 			if (err) { return callback(err); }
-			if (result) { return callback(null, 'email'); }
-			callback(null, null);
+			if (result) { errors.email = true; }
+			if (Object.keys(errors).length === 0) {
+				return callback (null, null);
+			}
+			callback(null, errors);
 		});
 	});
 }
@@ -178,12 +182,12 @@ function sendPassword(user, isNew, callback) {
 						from: EMAIL_FROM_NAME,
 						to: user.email,
 						subject: 'An admin has created an account for you!',
-						text : 'Admin with the username of ' + user.admin + ' has created an account for you on Tech Check Ins!'
+						/*text : 'Admin with the username of ' + user.admin + ' has created an account for you on Tech Check Ins!'
 							+ ' Your username is: ' + user.username + ' and your password is: ' + newPassword + '. Please log in'
-							+ ' to change it and start checking in!',
+							+ ' to change it and start checking in!',*/
 						html : '<p>Admin with the username of ' + user.admin + ' has created an account for you on Tech Check ' 
-							+ 'Ins!</p><p>Your username is: ' + user.username + ' and your password is: ' + newPassword + '</p>'
-							+ '<p>Please log in to change it.</p>'
+							+ 'Ins!</p><p>Your username is: <strong>' + user.username + '</strong> and your password is: <strong>' 
+							+ newPassword + '</strong></p><p>Please log in to change it.</p>'
 					};
 				}
 				else {
@@ -311,7 +315,7 @@ router.post('/checkin', isUser, function (req, res, next) {
 	checkin.timestamp = checkin.timestamp.replace(/[<()>"']/g, '*');
 	checkin.name = res.locals.user.firstName + " " + res.locals.user.lastName
 	checkin.username = res.locals.user.username;
-	checkin.created_At = moment().utc().toString();
+	checkin.created_at = moment().utc().toString();
 	DB.collection(res.locals.user.admin + "_checkins").insertOne(checkin, function (err) {
 		if (err) { return res.status(500).send(); }
 		return res.status(201).send();
@@ -418,11 +422,14 @@ router.post('/settings', isAdmin, function (req, res, next) {
 				checkIfTaken(newData.username, newData.email, function (err, result) {
 					if (err) { return res.status(500).send(); }
 					if (result) {
-						res.writeHead(400, "Bad Request", { "Content-Type":"application/json" } );
-						return res.end(JSON.stringify( {error: result + ' already exists'} )); 
+						res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+						console.log(result);
+						return res.end(JSON.stringify({error: result})); 
+					}
+					if (newData.firstName === '') {
+						newData.firstName = newData.username;
 					}
 					newData.created_at = moment().utc().toString();
-					console.log(newData.created_at);
 					newData.admin = adminUsername;
 					DB.collection('users').insertOne(newData, function (err) {
 						if (err) { return res.status(500).send(); }
@@ -438,8 +445,8 @@ router.post('/settings', isAdmin, function (req, res, next) {
 									var html = jade.renderFile('./views/admin-settings-user.jade', { 
 										userArray: removePasswords(results) 
 									});
-									res.writeHead(201, "Created", { "Content-Type":"text/html" } );
-									res.end(html);
+									res.writeHead(201, "Created", { "Content-Type":"application/json;charset=UTF-8" } );
+									res.end( JSON.stringify( {html: html, data: results} ));
 								});
 							}
 						});
@@ -476,7 +483,6 @@ router.post('/settings', isAdmin, function (req, res, next) {
 							else {
 								return res.status(500).send();
 							}
-							console.log(newData);
 							DB.collection('users').updateOne({ username: username}, { $set : newData }, function (err, result) {
 								if (err) { return res.status(500).send(); }
 								else {
@@ -518,7 +524,7 @@ router.post('/settings', isAdmin, function (req, res, next) {
 router.get('/time', hasPermissions, function(req, res, next) {
 	var timezone = req.query.tz
 	var currentTime = momentTZ.tz(moment(), timezone).format("dddd, MMMM Do YYYY, h:mm:ss a");
-	res.writeHead(200,"OK",{"Content-Type":"text/html"});
+	res.writeHead(200,"OK",{"Content-Type":"text/html;charset=UTF-8"});
 	res.end(currentTime);
 });
 
@@ -539,7 +545,7 @@ router.post('/history', hasPermissions, function(req, res, next) {
 		if (err) { return res.status(500).send(); }
 		var coordinates = {};
 		coordinates[name] = results;
-		res.writeHead(200,"OK",{"Content-Type":"application/json"});
+		res.writeHead(200, "OK", {"Content-Type":"application/json;charset=UTF-8"});
 		res.end(JSON.stringify(coordinates));
 	});
 });
@@ -553,7 +559,7 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 		if (err) { return res.status(500).send(); }
 		if (results.length === 0 ) {
 			var html = "<p id='no-results'>You have no users, please add them on the settings page (Gear Icon above)!</p>";
-			res.writeHead(200,"OK",{"Content-Type":"text/html"});
+			res.writeHead(200, "OK", {"Content-Type":"text/html;charset=UTF-8"});
 			return res.end(html);
 		}
 		var numTechs = results.length;
@@ -572,7 +578,7 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 					if (techArray.length === 0 ) {
 						var html = "<p id='no-results'>No active users, your users will appear here after they have at"
 						+ " least one Check In.</p>";
-						res.writeHead(200,"OK",{"Content-Type":"text/html"});
+						res.writeHead(200, "OK", {"Content-Type":"text/html;charset=UTF-8"});
 						return res.end(html);
 					}
 					// Sort array so that it doesn't change around
@@ -581,7 +587,7 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 						else {return -1;}
 					});
 					var html = jade.renderFile('./views/techList.jade', { techArray: techArray });
-					res.writeHead(200,"OK",{"Content-Type":"text/html"});
+					res.writeHead(200, "OK", {"Content-Type":"text/html;charset=UTF-8"});
 					res.end(html);
 				}
 			});
@@ -614,7 +620,7 @@ router.get('/updateMap', hasPermissions, function(req, res, next) {
 					if (Object.keys(coordinates).length === 0 ) {
 						return res.status(204).send();
 					}
-					res.writeHead(200,"OK",{"Content-Type":"application/json"});
+					res.writeHead(200,"OK",{"Content-Type":"application/json;charset=UTF-8"});
 					res.end(JSON.stringify(coordinates));
 				}
 			});

@@ -56,7 +56,7 @@ td {
     position: fixed;
     top: 55px;
     z-index: 9999;
-    height: 80px;
+    height: 90px;
     right: 5px;
     width: 200px;
     text-align: center;
@@ -67,7 +67,9 @@ td {
 }
 
 #notify input.btn.btn-primary.btn-sm {
-    margin-top: 7px;
+    position: absolute;
+    bottom: 10px;
+    left: 75px;
 }
 
 .modal-icon {
