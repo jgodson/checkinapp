@@ -4,3 +4,5 @@ env.js
 insertAdmin.js
 .DS_Store
 npm-debug.log
+mailtest.js
+filterpropstest.js

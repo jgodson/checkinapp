@@ -1,0 +1,41 @@
+body {
+	background-color: gainsboro;
+	margin-top: 55px;
+}
+
+#notify {
+	display: none;
+    position: fixed;
+    top: 55px;
+    z-index: 9999;
+    height: 90px;
+    right: 5px;
+    width: 200px;
+    text-align: center;
+    color: white;
+    padding: 10px;
+    border-radius: 3px;
+    background-color: rgba(0,00,0,0.6);
+}
+
+#notify input.btn.btn-primary.btn-sm {
+    position: absolute;
+    bottom: 10px;
+    left: 75px;
+}
+
+#settings p {
+	font-weight: bold;
+}
+
+#settings label {
+	margin-bottom: 5px;
+	margin-top: 5px;
+}
+.well {
+	padding: 10px;
+}
+
+button[name='save'] {
+	max-width: 250px;
+}

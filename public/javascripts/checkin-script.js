@@ -6,6 +6,8 @@ var $checkin = document.getElementById('type');
 var $accuracy = document.getElementById('accuracy');
 var $warning = document.getElementById('warning');
 var $checkinBtn = document.getElementById('submit-checkin');
+var $updateBtn;
+var locator;
 var marker;
 var map;
 
@@ -32,6 +34,44 @@ function showLocation (loc, date) {
 		$warning.innerHTML = "Oops something went wrong. Try refreshing the page.";
 		$warning.style.display = "fixed";
 	}
+}
+
+function showMarker (pos) {
+	$checkinBtn.removeAttribute('disabled');
+	$updateBtn.text("Stop Locating");
+	$updateBtn.addClass('btn-warning');
+	$updateBtn.removeClass('btn-primary');
+	
+	if (marker !== undefined) {
+		marker.setMap(null);
+	}
+	var location = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+	var date = moment().format("ddd, MMM Do YYYY, h:mm:ss a");
+	map.setCenter(location);
+	if (pos.coords.accuracy < 25) {
+		stopLocationWatch();
+		$warning.style.display = "none";
+		showLocation(pos, date);
+	}
+	else {
+		$warning.innerHTML = "Got location, but accuracy is not very good.";
+		setTimeout(function() {
+			$('#warning').fadeOut();
+		}, 2000)
+		showLocation(pos, date);
+	}
+	var infowindow = new google.maps.InfoWindow({
+		content: "Location at: " + date
+	});
+	marker = new google.maps.Marker({
+		map: map,
+		position: location,
+		title: "Current Locations",
+		animation: google.maps.Animation.DROP
+	});
+	marker.addListener('click', function() {
+		infowindow.open(map, marker);
+	});
 }
 
 function submitCheckIn () {
@@ -94,51 +134,61 @@ function submitCheckIn () {
 }
 
 function updateLocation () {
+	var options = {
+		enableHighAccuracy: true,
+		timeout: 8000,
+		maximumAge: 0
+	}
+	
+	var mobile = typeof window.orientation === 'undefined' ? false : true;
+	
 	$warning.innerHTML = "Attempting to get location....";
 	$('#warning').fadeIn();
+	
 	if (marker !== undefined) {
 		marker.setMap(null);
 	}
-	navigator.geolocation.getCurrentPosition( function (pos) {
-		$checkinBtn.removeAttribute('disabled');
-		var location = {lat: pos.coords.latitude, lng: pos.coords.longitude};
-		var date = moment().format("ddd, MMM Do YYYY, h:mm:ss a");
-		map.setCenter(location);
-		if (pos.coords.accuracy < 50) {
-			$warning.style.display = "none";
-			showLocation(pos, date);
+	
+	if (!mobile) {
+		navigator.geolocation.getCurrentPosition(function (pos) {
+			showMarker(pos);
+			stopLocationWatch();
+		}, function (error) {
+			$warning.innerHTML = "Error: Could not get location. :(<br>If you did not get prompted for permission, " 
+				+ "you may need to turn on location services for your browser. Try refreshing the page.";
+			$('#warning').fadeIn();
+		}, options);
+	}
+	else {
+		locator = navigator.geolocation.watchPosition(function (pos) {
+			showMarker(pos)
+		}, function (error) {
+			$warning.innerHTML = "Error: Could not get location. :(<br>If you did not get prompted for permission, " 
+				+ "you may need to turn on location services for your browser. Try refreshing the page.";
+			$('#warning').fadeIn();
+			stopLocationWatch();
+		}, options);
+	}
+}
 
-		}
-		else {
-			$warning.innerHTML = "Got location, but accuracy is not very good.";
-			setTimeout(function() {
-				$('#warning').fadeOut();
-			}, 2000)
-			showLocation(pos, date);
-		}
-		var infowindow = new google.maps.InfoWindow({
-					content: "Location at: " + date
-		});
-		marker = new google.maps.Marker({
-					map: map,
-					position: location,
-					title: "Current Locations",
-					animation: google.maps.Animation.DROP
-		});
-		marker.addListener('click', function() {
-					infowindow.open(map, marker);
-		});
-	}, function (error) {
-		$warning.innerHTML = "Error: Could not get location. :(<br>If you did not get prompted for permission, " 
-		+ "you may need to turn on location services for your browser. Try refreshing the page.";
-		$('#warning').fadeIn();
-		console.log(error);
-	}, { //options
-	enableHighAccuracy: true,
-	maximumAge: 0
-	});
+function stopLocationWatch () {
+	navigator.geolocation.clearWatch(locator);
+	$updateBtn.text('Update Location');
+	$updateBtn.addClass('btn-primary');
+	$updateBtn.removeClass('btn-warning');
 }
 
 $(document).ready( function () {
+	$updateBtn = $("button[name='update']");
 	updateLocation();
+	
+	// Listener for Update Location/Stop Locating button
+	$updateBtn.on('click', function () {
+		if ($updateBtn.text() === 'Stop Locating') {
+			stopLocationWatch();
+		}
+		else {
+			updateLocation();
+		}
+	});
 });

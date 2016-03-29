@@ -2,7 +2,6 @@ var $notifier = $('#notify');
 var $notifierText = $notifier.find('p');
 var notifierTimeout;
 var closeEditModal = false;
-// .trim().replace(/[<()>"']/g, '*');
 
 function showRequestStatus (text, hideLoader) {
 	if (typeof hideLoader === 'undefined') { hideLoader = false; }
@@ -371,5 +370,4 @@ $(document).ready(function () {
 		toggleSwitch.prop('checked') ? toggleSwitch.prop('checked', false) 
 			: toggleSwitch.prop('checked', true);
 	});
-	
 });

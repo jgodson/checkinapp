@@ -1,76 +1,41 @@
-doctype html
-html
-	head
-		meta(charset='utf-8')
-		meta(http-equiv='X-UA-Compatible', content='IE=edge')
-		meta(name='viewport', content='width=device-width, initial-scale=1')
-		meta(name="mobile-web-app-capable", content="yes")
-		meta(name="apple-mobile-web-app-capable", content="yes")
-		title= "User Check Ins"
-		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
-		link(rel='stylesheet', href='/stylesheets/font-awesome.min.css')
-		link(rel='stylesheet', href='/stylesheets/common.css')
-		link(rel='stylesheet', href='/stylesheets/checkin.css')
-		link(rel='icon', sizes='128x128', href='/apple-touch-icon.png')
-	body
-		nav.navbar.navbar-default.navbar-fixed-top
-				.container
-					.navbar-header
-						button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#navbar', aria-expanded='false', aria-controls='navbar')
-							span.sr-only Toggle navigation
-							span.icon-bar
-							span.icon-bar
-							span.icon-bar
-						.navbar-brand= user.firstName + " " + user.lastName
-					#navbar.collapse.navbar-collapse
-						ul.nav.navbar-nav
-							li(class=(title === 'Main' ? 'active' : ''))
-								a(href='/app/checkin') Check Ins
-							li(class=(title === 'Settings' ? 'active' : ''))
-								a(href='/app/usersettings') Settings
-							li
-								a(href='/users/logout') Log Out
-		#topArea.col-sm-6.col-sm-offset-3.text-center
-			#warning.alert.alert-warning.full-screen
-			#success.alert.alert-success.full-screen Successfully submitted Check In!
-			#inputs
-				form(name='checkin-form', action='javascript:submitCheckIn()')
-					.form-group
-						.input-group
-							span.input-group-addon
-								i.glyphicon.glyphicon-time
-							input#time.form-control(type='text', placeholder='Time', readonly)
-					.form-group
-						.input-group
-							span.input-group-addon
-								i.glyphicon.glyphicon-globe
-							input#lat.form-control(type='text', placeholder='LAT', readonly)
-					.form-group
-						.input-group
-							span.input-group-addon
-								i.glyphicon.glyphicon-globe
-							input#lng.form-control(type='text', placeholder='LNG', readonly)
-					.form-group
-						.input-group
-							span.input-group-addon
-								i.glyphicon.glyphicon-screenshot
-							input#accuracy.form-control(type='text', placeholder='Accuracy', readonly)
-					.form-group
-						.input-group
-							span.input-group-addon
-								i.glyphicon.glyphicon-comment
-							select#type.form-control(name="type")
-								option(value='Check In') Check In
-								option(value='Start') Start
-								option(value='End') End
-							input#message.form-control(type='text', placeholder='Message')
-					.form-group
-						input#submit-checkin.btn.btn-success.btn-block(type='submit', value='Check In', disabled='disabled')
-			button.btn.btn-primary.btn-block(onclick='updateLocation()') Update Location
-		#map.col-sm-6.col-sm-offset-3
-		script(src='/javascripts/jquery.min.js')
-		script(src='/javascripts/bootstrap.min.js')
-		script(src='/javascripts/moment.js')
-		script(async defer src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY + "&callback=initMap")
-		script(src='/javascripts/scripts.js')
-		
+extends user-layout
+
+block content
+	#topArea.col-sm-6.col-sm-offset-3.text-center
+				#warning.alert.alert-warning.full-screen
+				#success.alert.alert-success.full-screen Successfully submitted Check In!
+				#inputs
+					form(name='checkin-form', action='javascript:submitCheckIn()')
+						.form-group
+							.input-group
+								span.input-group-addon
+									i.glyphicon.glyphicon-time
+								input#time.form-control(type='text', placeholder='Time', readonly)
+						.form-group
+							.input-group
+								span.input-group-addon
+									i.glyphicon.glyphicon-globe
+								input#lat.form-control(type='text', placeholder='LAT', readonly)
+						.form-group
+							.input-group
+								span.input-group-addon
+									i.glyphicon.glyphicon-globe
+								input#lng.form-control(type='text', placeholder='LNG', readonly)
+						.form-group
+							.input-group
+								span.input-group-addon
+									i.glyphicon.glyphicon-screenshot
+								input#accuracy.form-control(type='text', placeholder='Accuracy', readonly)
+						.form-group
+							.input-group
+								span.input-group-addon
+									i.glyphicon.glyphicon-comment
+								select#type.form-control(name="type")
+									option(value='Check In') Check In
+									option(value='Start') Start
+									option(value='End') End
+								input#message.form-control(type='text', placeholder='Message')
+						.form-group
+							input#submit-checkin.btn.btn-success.btn-block(type='submit', value='Check In', disabled='disabled')
+				button.btn.btn-primary.btn-block(name='update') Update Location
+			#map.col-sm-6.col-sm-offset-3

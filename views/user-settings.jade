@@ -1,0 +1,34 @@
+extends user-layout
+
+block content
+	#loader
+		.loader
+	#notify
+		p Content
+		input.btn.btn-primary.btn-sm(name='close', value='Close', type='button')
+	#settings
+		.form-group.well.col-lg-6.col-lg-offset-3.col-md-8.col-md-offset-2.col-sm-12
+			p.text-center Change Password
+			label Old Password
+			input.form-control(name='old-password', type='password')
+			label New Password
+			input.form-control(name='new-password', type='password')
+			label Confirm New Password
+			input.form-control(name='new-password2', type='password')
+		.form-group.well.col-lg-6.col-lg-offset-3.col-md-8.col-md-offset-2.col-sm-12
+			p.text-center Overdue Notifications
+			.onoffswitch.center-block
+				input#overdue.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
+				label.onoffswitch-label(for='myonoffswitch')
+					span.onoffswitch-inner
+					span.onoffswitch-switch
+			if user.account_type === 'user'
+				p.text-center Reminder Notifications
+				.onoffswitch.center-block
+					input#checkin-reminders.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
+					label.onoffswitch-label(for='myonoffswitch')
+						span.onoffswitch-inner
+						span.onoffswitch-switch
+		.form-group.well.col-lg-6.col-lg-offset-3.col-md-8.col-md-offset-2.col-sm-12
+			button.btn.btn-block.btn-success.center-block(name='save') Save Changes
+			

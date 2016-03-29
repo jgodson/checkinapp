@@ -48,6 +48,7 @@ html
 	script(src='/javascripts/moment-timezone-data-2020.js')
 	script(src='/javascripts/jquery.min.js')
 	script(src='/javascripts/bootstrap.min.js')
+	script(src='/javascripts/stayInWebApp.min.js')
 	block content
 	if title === 'Main' || title === 'History'
 		script(src='/javascripts/mapscript.js')
@@ -57,4 +58,7 @@ html
 		script(src='/javascripts/history.js')
 	if title === 'Settings'
 		script(src='/javascripts/admin-settings.js')
-		
+	script.
+		$(function() {
+			$.stayInWebApp();
+		});

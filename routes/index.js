@@ -23,13 +23,13 @@ const MAPS_API_KEY = process.env.MAPS_API_KEY;
 const DEFAULT_ICON = "/images/markers/orange_Marker.png";
 const EMAIL_FROM_NAME = 'Tech Check Ins';
 const VALID_ADMIN_USER_EDIT_PROPS = "firstName lastName userGroup icon emergencyContact".split(' '); // Make an array out of the string
-const VVALID_ADMIN_VIEW_EDIT_PROPS = "firstName lastName userGroup".split(' ');
+const VALID_ADMIN_VIEW_EDIT_PROPS = "firstName lastName userGroup".split(' ');
 const VALID_USER_NEW_PROPS = "username email account_type notifications reminders".split(' ').concat(VALID_ADMIN_USER_EDIT_PROPS);
 const VALID_VIEW_NEW_PROPS = "username firstName lastName userGroup email account_type notifications".split(' ');
 const VALID_SUBPROPS = "name phone email".split(' ');
-const VALID_USER_EDIT_PROPS = 'notifications reminders'.split(' ');
-const VALID_VIEW_EDIT_PROPS = 'notifications';
-const VALID_ADMIN_EDIT_PROPS = '';
+const VALID_USER_EDIT_PROPS = 'notifications reminders oldpassword password'.split(' ');
+const VALID_VIEW_EDIT_PROPS = 'notifications oldpassword password'.split(' ');
+const VALID_ADMIN_EDIT_PROPS = 'notifications oldpassword password'.split(' ');
 
 // Takes the time from the document and the current time and gets the time diff and formats the current time
 function timeFunctions (docTime, currentMoment, timezone) {
@@ -95,63 +95,82 @@ function checkIfTaken (username, email, callback) {
 	});
 }
 
-// Only get what we want out of the data submitted and sanitize any input
-function filterProps (dirtyObj, filterType) {
-	// Do some validation
-	if (typeof dirtyObj !== 'object') {
-		return new Error('First paramater must be an object');
+function filterProps (dirtyObj, validPropArray, objNum) {
+	// Only works one object down eg. { prop1: 'prop', prop2: { objprop1: 'prop' } }
+	// @param dirtyObj - the object to filter
+	// @param validPropArray - array of valid properties for each object 
+	// eg. [ ["OriginalObjprop1", "OriginalObjprop2"], ["SubObjprop1", "SubObjprop2"], ... ]
+	if (!validPropArray) {
+		throw new Error('Must specifiy valid properties to check for');
 	}
-	if (filterType === 'admin-user-edit' ) {
-		var validPropList = VALID_ADMIN_USER_EDIT_PROPS;
-	}
-	else if (filterType === 'admin-view-edit') {
-		var validPropList = VALID_ADMIN_VIEW_EDIT_PROPS;
-	}
-	else if (filterType === 'admin-edit') {
-		var validPropList = '';
-	}
-	else if (filterType === 'user-edit') {
-		var validPropList = '';
+	if (!Array.isArray(validPropArray)) {
+		throw new TypeError('Invalid validPropArray paramater for Object number ' + objNum);
 	} 
-	else if (filterType === 'view-edit') {
-		var validPropList = '';
-	}
-	else if (filterType === 'create-view-user') {
-		var validPropList = VALID_VIEW_NEW_PROPS;
-	}
-	else if (filterType === 'create-user') {
-		var validPropList = VALID_USER_NEW_PROPS
-	}
-	else {
-		return new Error('Must specify a valid filter type');
-	}
-	// Do the filtering
-	var cleanObj = {};
-	for (var prop in dirtyObj) {
-		if (dirtyObj.hasOwnProperty(prop)) {
-			validPropList.forEach(function (validProp) {
-				if (prop === validProp) {
-					if (typeof dirtyObj[prop] === 'object') {
-						cleanObj[prop] = {};
-						for (var subprop in dirtyObj[prop]) {
-							if (dirtyObj[prop].hasOwnProperty(subprop)) {
-								VALID_SUBPROPS.forEach(function (validSubProp) {
-									if (subprop === validSubProp) {
-										cleanObj[prop][subprop] = dirtyObj[prop][subprop]
-											.trim().replace(/[<()>"']/g, '*');
-									}
-								});
-							}
-						}
-					}
-					else {
-						cleanObj[prop] = dirtyObj[prop].trim().replace(/[<()>"']/g, '*');
-					}
-				}
-			});
+	if (typeof objNum === 'undefined') {
+		var objNum = 0;
+		if (Array.isArray(validPropArray[0])) {
+			var originalPropArray = validPropArray;
+			validPropArray = validPropArray[objNum];
 		}
 	}
+	// Do some validation
+	if (typeof dirtyObj !== 'object' && !Array.isArray(dirtyObj)) {
+		throw new TypeError('First paramater must be an object');
+	}
+	
+	// Do the filtering
+	var cleanObj = {};
+	Object.keys(dirtyObj).forEach(function (prop) {
+		console.log("ObjNum: " + objNum);
+		console.log(prop);
+		validPropArray.forEach(function (validProp) {
+			console.log(prop === validProp);
+			if (prop === validProp) {
+				if (typeof dirtyObj[prop] === 'boolean' || typeof dirtyObj[prop] === 'number') {
+					cleanObj[prop] = dirtyObj[prop];
+				}
+				else if (typeof dirtyObj[prop] === 'string') {
+					// CHANGE REGEX HERE
+					cleanObj[prop] = dirtyObj[prop].trim().replace(/[<()>"']/g, '*');
+				}
+				else if (typeof dirtyObj[prop] === 'object') {
+					if (Array.isArray(dirtyObj[prop])) {
+						cleanObj[prop] = filterArray(dirtyObj[prop]);
+					}
+					else {
+						if (Array.isArray(originalPropArray[objNum + 1])) {
+							cleanObj[prop] = filterProps(dirtyObj[prop], originalPropArray[objNum + 1], ++objNum);
+						}
+						else {
+							throw new Error('If there are Objects within the first Object you must specifiy valid ' +
+							'properties for each object. eg. [ ["prop1", "prop2"], ["Obj2prop1", "Obj2prop2"], ... ].');
+						}
+					}
+				}
+				else {
+					console.log("Oops didn't match anything.....");
+				}
+			}
+		});
+	});
 	return cleanObj;
+}
+
+// Filter array string values with custom regex
+function filterArray (array) {
+	for (var index = 0; index < array.length; index++) {
+		if (typeof array[index] === 'string') {
+			// CHANGE REGEX HERE
+			array[index] = array[index].trim().replace(/[<()>"']/g, '*');
+		}
+		else if (Array.isArray(array[index])) {
+			array[index] = filterArray(array[index]);
+		}
+		else {
+			array[index] = array[index];
+		}
+	}
+	return array;
 }
 
 function genPassword(desiredLength) {
@@ -287,6 +306,7 @@ function isAdmin (req, res, next) {
 }
 
 router.get('/checkin', isUser, function (req, res, next) {
+	// CHANGE HERE BETWEEN WATCH AND REGULAR UPDATE
 	res.render('checkin', {	
 		title: 'Main', 
 		MAPS_API_KEY: MAPS_API_KEY
@@ -331,22 +351,39 @@ router.get('/', hasPermissions, function(req, res, next) {
 });
 
 // Admin Settings
-router.get('/settings', isAdmin, function(req, res, next) {
-	getUsersForAdmin(res.locals.user.username, function(err, results) {
-		if (err) { return res.status(500).send(); }
-		res.render('admin-settings', { 
-			title: 'Settings',
-			userArray: removePasswords(results)
+router.get('/settings', hasPermissions, function(req, res, next) {
+	if (res.locals.account_type === 'view') {
+		res.render('user_settings', {
+			title: 'Settings'
 		});
-	});
+	}
+	else {
+		getUsersForAdmin(res.locals.user.username, function(err, results) {
+			if (err) { return res.status(500).send(); }
+			res.render('admin-settings', { 
+				title: 'Settings',
+				userArray: removePasswords(results)
+			});
+		});
+	}
 });
 
 // User Settings
 router.get('/userSettings', isUser, function(req, res, next) {
 	res.render('user-settings', {
-		title: 'Settings',
-		user: res.locals.user
+		title: 'Settings'
 	});
+});
+
+router.post('/userSettings', isUser, function(req, res, next) {
+	var username = res.locals.user.username;
+	if (typeof req.body.data === 'object' && !Array.isArray(req.body.data)) {
+		var data = req.body.data;
+	}
+	else {
+		return res.status(400).send();
+	}
+	
 });
 
 // Returns all possible marker icons
@@ -368,7 +405,7 @@ router.get('/settings/icons', isAdmin, function(req, res, next) {
 });
 
 // Edit settings/user/create new users
-router.post('/settings', isAdmin, function (req, res, next) {
+router.post('/settings', hasPermissions, function (req, res, next) {
 	var username;
 	var type;
 	var data;
@@ -381,10 +418,12 @@ router.post('/settings', isAdmin, function (req, res, next) {
 	else {
 		return res.status(400).send();
 	}
+	if (res.locals.user.account_type === 'view' && type !== 'self-edit') {
+		return res.status(403).send();
+	}
 	var adminUsername = res.locals.user.username;
-	if (typeof req.body.data === 'object') {
+	if (typeof req.body.data === 'object' && !Array.isArray(req.body.data)) {
 		data = req.body.data;
-		console.log(data.username)
 		if (!username && typeof data.username === 'string') {
 			username = data.username.trim().replace(/[<()>"']/g, '*').toLowerCase();
 		}
@@ -397,7 +436,7 @@ router.post('/settings', isAdmin, function (req, res, next) {
 		return res.status(400).send();
 	}
 	if (typeof username === 'string') {
-		if (type === 'edit' || type === 'delete' || type === 'create' || type === 'reset') {
+		if (type === 'edit' || type === 'delete' || type === 'create' || type === 'reset' || type === 'self-edit') {
 			if (type === 'create') {
 				console.log("in create");
 				// Make sure we have data object
@@ -411,10 +450,10 @@ router.post('/settings', isAdmin, function (req, res, next) {
 					}
 				var newData;
 				if (data.account_type === 'user') {
-					newData = filterProps(data, 'create-user');
+					newData = filterProps(data, [VALID_USER_NEW_PROPS, VALID_SUBPROPS]);
 				}
 				else if (data.account_type === 'view') {
-					newData = filterProps(data, 'create-view-user');
+					newData = filterProps(data, VALID_VIEW_NEW_PROPS);
 				}
 				else {
 					return res.status(400).send();
@@ -475,10 +514,10 @@ router.post('/settings', isAdmin, function (req, res, next) {
 							// Get only the props we need out of the data submitted
 							var newData;
 							if (result.account_type === 'user') {
-								newData = filterProps(data, 'admin-user-edit');
+								newData = filterProps(data, [VALID_ADMIN_USER_EDIT_PROPS, VALID_SUBPROPS]);
 							}
 							else if (result.account_type === 'view') {
-								newData = filterProps(data, 'view-user-edit');
+								newData = filterProps(data, VALID_ADMIN_VIEW_EDIT_PROPS);
 							}
 							else {
 								return res.status(500).send();
@@ -495,7 +534,7 @@ router.post('/settings', isAdmin, function (req, res, next) {
 								}
 							});
 						}
-						else {
+						else if (type === 'reset') {
 							console.log('in reset');
 							sendPassword(result, false, function (err, sent) {
 								if (err) { return res.status(500).send(); }
@@ -503,6 +542,10 @@ router.post('/settings', isAdmin, function (req, res, next) {
 								else { return res.status(500).send(); }
 							});
 							
+						}
+						else {
+							console.log('in self-edit');
+							res.status(200).send();
 						}
 					}
 					else {
