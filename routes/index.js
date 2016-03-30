@@ -17,6 +17,7 @@ const SMTP_CONFIG = {
         pass: process.env.NODEMAILER_PASSWORD
     }
 };
+const transporter = nodemailer.createTransport(SMTP_CONFIG);
 
 // Declare a few constant variables
 const MAPS_API_KEY = process.env.MAPS_API_KEY;
@@ -27,13 +28,17 @@ const VALID_ADMIN_VIEW_EDIT_PROPS = "firstName lastName userGroup".split(' ');
 const VALID_USER_NEW_PROPS = "username email account_type notifications reminders".split(' ').concat(VALID_ADMIN_USER_EDIT_PROPS);
 const VALID_VIEW_NEW_PROPS = "username firstName lastName userGroup email account_type notifications".split(' ');
 const VALID_SUBPROPS = "name phone email".split(' ');
-const VALID_USER_EDIT_PROPS = 'notifications reminders oldpassword password'.split(' ');
-const VALID_VIEW_EDIT_PROPS = 'notifications oldpassword password'.split(' ');
-const VALID_ADMIN_EDIT_PROPS = 'notifications oldpassword password'.split(' ');
+const VALID_USER_EDIT_PROPS = 'notifications reminders password'.split(' ');
+const VALID_VIEW_EDIT_PROPS = 'notifications password'.split(' ');
+const VALID_ADMIN_EDIT_PROPS = 'notifications password'.split(' ');
+const PASS_CHANGE_MESSAGE = 'Your password was recently changed. If this was not you, please ask your admin'
+	+ ' to reset your password immediately.';
 
-// Takes the time from the document and the current time and gets the time diff and formats the current time
-function timeFunctions (docTime, currentMoment, timezone) {
+// Takes the time from the document and returns an array with the changed document, the time difference in minutes,
+// and a nicely formatted string of the time difference
+function timeFunctions (docTime, timezone) {
 	var docMoment = moment(docTime, 'ddd, MMM Do YYYY, h:mm:ss a Z', 'en');
+	var currentMoment = moment();
 	var timeDiff = currentMoment.diff(docMoment, 'minutes');
 	docMoment = momentTZ.tz(docMoment, timezone).format("ddd, MMM Do YYYY, h:mm:ss a");
 	var timeString;
@@ -95,6 +100,7 @@ function checkIfTaken (username, email, callback) {
 	});
 }
 
+// Filter unwanted properties out of an object given an array of valid properties
 function filterProps (dirtyObj, validPropArray, objNum) {
 	// Only works one object down eg. { prop1: 'prop', prop2: { objprop1: 'prop' } }
 	// @param dirtyObj - the object to filter
@@ -121,10 +127,7 @@ function filterProps (dirtyObj, validPropArray, objNum) {
 	// Do the filtering
 	var cleanObj = {};
 	Object.keys(dirtyObj).forEach(function (prop) {
-		console.log("ObjNum: " + objNum);
-		console.log(prop);
 		validPropArray.forEach(function (validProp) {
-			console.log(prop === validProp);
 			if (prop === validProp) {
 				if (typeof dirtyObj[prop] === 'boolean' || typeof dirtyObj[prop] === 'number') {
 					cleanObj[prop] = dirtyObj[prop];
@@ -156,7 +159,88 @@ function filterProps (dirtyObj, validPropArray, objNum) {
 	return cleanObj;
 }
 
-// Filter array string values with custom regex
+function selfSettingsEdit(data, res) {
+	var username = res.locals.user.username;
+	var passChange = false;
+	if (data.oldpass || data.password || data.confpass) {
+		if (!(data.oldpass && data.password && data.confpass)) {
+			res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+			return res.end(JSON.stringify({ error: 'Missing password info' })); 
+		}
+		data.oldpass = data.oldpass.trim();
+		data.password = data.password.trim();
+		data.confpass = data.confpass.trim();
+		if (data.password.length >= 8 && data.confpass.length >= 8) {
+			if (data.password !== data.confpass) {
+				res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+				return res.end(JSON.stringify({ error: 'New passwords do not match' })); 
+			}
+			else {
+				passChange = true;
+			}
+		}
+		else {
+			res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+			return res.end(JSON.stringify({ error: 'Password must be at least 8 characters' })); 
+		}
+	}
+	if (data.notifications) {
+		if (typeof data.notifications !== 'boolean') {
+			return res.status(400).send(); 
+		}
+	}
+	if (data.reminders) {
+		if (typeof data.reminders !== 'boolean') {
+			return res.status(400).send();
+		}
+	}
+	if (passChange === true) {
+		bcrypt.compare(data.oldpass, res.locals.user.password, function (err, result) {
+			if (!result) {
+				res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+				return res.end(JSON.stringify({error: 'Incorrect old password'})); 
+			}
+			if (res.locals.user.account_type === 'user') {
+				data = filterProps(data, VALID_USER_EDIT_PROPS);
+			}
+			else if (res.locals.user.account_type === 'view') {
+				data = filterProps(data, VALID_VIEW_EDIT_PROPS);
+			}
+			else {
+				data = filterProps(data, VALID_ADMIN_EDIT_PROPS);
+			}
+			bcrypt.hash(data.password, bcrypt.genSaltSync(), null, function(err, hash) {
+				if (err) { return res.status(500).send(); }
+				data.password = hash;
+				DB.collection('users').updateOne({ username: username }, { $set : data }, function (err) {
+					if (err) { return res.status(500).send(); }
+					sendEmail(res.locals.user.email, 'Password Changed', PASS_CHANGE_MESSAGE, function (err) {
+						if (err) { console.log(err); }
+						return res.status(200).send();
+					});
+				});
+			});
+		});
+	}
+	else {
+		delete data.password;
+		if (res.locals.user.account_type === 'user') {
+			data = filterProps(data, VALID_USER_EDIT_PROPS);
+		}
+		else if (res.locals.user.account_type === 'view') {
+			data = filterProps(data, VALID_VIEW_EDIT_PROPS);
+		}
+		else {
+			data = filterProps(data, VALID_ADMIN_EDIT_PROPS);
+		}
+		DB.collection('users').updateOne({ username: username }, { $set : data }, function (err) {
+			if (err) { return res.status(500).send(); }
+			return res.status(200).send();
+		});
+	}
+}
+
+// Filter array string values with custom replacer regex
 function filterArray (array) {
 	for (var index = 0; index < array.length; index++) {
 		if (typeof array[index] === 'string') {
@@ -173,6 +257,7 @@ function filterArray (array) {
 	return array;
 }
 
+// Generate a random password and return it
 function genPassword(desiredLength) {
 	var password = '';
 	var uppercase = false;
@@ -201,9 +286,9 @@ function sendPassword(user, isNew, callback) {
 						from: EMAIL_FROM_NAME,
 						to: user.email,
 						subject: 'An admin has created an account for you!',
-						/*text : 'Admin with the username of ' + user.admin + ' has created an account for you on Tech Check Ins!'
+						text : 'Admin with the username of ' + user.admin + ' has created an account for you on Tech Check Ins!'
 							+ ' Your username is: ' + user.username + ' and your password is: ' + newPassword + '. Please log in'
-							+ ' to change it and start checking in!',*/
+							+ ' to change it and start checking in!',
 						html : '<p>Admin with the username of ' + user.admin + ' has created an account for you on Tech Check ' 
 							+ 'Ins!</p><p>Your username is: <strong>' + user.username + '</strong> and your password is: <strong>' 
 							+ newPassword + '</strong></p><p>Please log in to change it.</p>'
@@ -220,17 +305,28 @@ function sendPassword(user, isNew, callback) {
 				}
 			}
 			else {
-				var mailOpts = {
-					from: EMAIL_FROM_NAME,
-					to: user.email,
-					subject: 'You have requested a password reset',
-					text : 'Your new password is: ' + newPassword + '. Please log in to change it.',
-					html : '<p>Your new password is: ' + newPassword + '</p><p>Please log in to change it.</p>'
-				};
+				if (isNew) {
+					var mailOpts = {
+						from: EMAIL_FROM_NAME,
+						to: user.email,
+						subject: 'New Tech Check Ins Account',
+						text : 'Your username is ' + newUsername + ' Your password is: ' + newPassword 
+							+ '. Please log in to change it.',
+						html : '<p>Your username is ' + newUsername + '</p><p>Your password is: ' + newPassword 
+							+ '</p><p>Please log in to change it.</p>'
+					};
+				}
+				else {
+					var mailOpts = {
+						from: EMAIL_FROM_NAME,
+						to: user.email,
+						subject: 'You have requested a password reset',
+						text : 'Your new password is: ' + newPassword + '. Please log in to change it.',
+						html : '<p>Your new password is: ' + newPassword + '</p><p>Please log in to change it.</p>'
+					};
+				}
 			}
-		
-			var transporter = nodemailer.createTransport(SMTP_CONFIG);
-
+			// Send email with new password
 			transporter.sendMail(mailOpts, function (err, response) {
 				if (err) { callback(err, false); } 
 				else { console.log(response); callback(null, true); }
@@ -238,6 +334,21 @@ function sendPassword(user, isNew, callback) {
 		});
 	});
 }
+
+// Send an information email (password changed, etc)
+function sendEmail (email, subject, message, callback) {
+	var mailOpts = {
+		from: EMAIL_FROM_NAME,
+		to: email,
+		subject: subject,
+		text : message
+	};
+	transporter.sendMail(mailOpts, function (err, response) {
+		if (err) { callback(err); } 
+		else { callback(null, true); }
+	});
+}
+
 
 // Get the last (newest) document from given tech
 function getDocsFromTech (tech, collection, callback) {
@@ -248,7 +359,13 @@ function getDocsFromTech (tech, collection, callback) {
 }
 
 // Get just what we need for map markers off that last 5 documents from a given tech
-function getCheckInLatLng (tech, icon, max, timezone, collection, callback) {
+function getCheckInLatLng (tech, icon, max, timezone, collection, group, callback) {
+	var query = {
+		username: tech
+	}
+	if (group !== undefined || group !== '') {
+		query.group = group;
+	}
 	DB.collection( collection + "_checkins" ).find({ username: tech }, { _id: 0, name: 1, message: 1, timestamp: 1, location: 1 })
 	.sort({_id: -1}).limit( max ).toArray(function (err, results) {
 		if (err) { return callback(err); }
@@ -266,7 +383,7 @@ function getCheckInLatLng (tech, icon, max, timezone, collection, callback) {
 
 // Make sure view/admin user is logged in
 function hasPermissions (req, res, next) {
-	if ( req.isAuthenticated()) {
+	if (req.isAuthenticated()) {
 		if (res.locals.user.account_type === 'admin' ||
 			res.locals.user.account_type === 'view')
 			{
@@ -305,15 +422,15 @@ function isAdmin (req, res, next) {
 	return res.redirect('/admins/login');
 }
 
+// GET - Check In Page
 router.get('/checkin', isUser, function (req, res, next) {
-	// CHANGE HERE BETWEEN WATCH AND REGULAR UPDATE
 	res.render('checkin', {	
 		title: 'Main', 
 		MAPS_API_KEY: MAPS_API_KEY
 	});
 });
 
-// Submit a checkin for user
+// POST - Submit a checkin for user
 router.post('/checkin', isUser, function (req, res, next) {
 	var checkin = req.body;
 	// Validate received input
@@ -342,7 +459,7 @@ router.post('/checkin', isUser, function (req, res, next) {
 	});
 });
 
-// Main app
+// GET - Main app
 router.get('/', hasPermissions, function(req, res, next) {
  	res.render('index', {	
 		title: 'Main', 
@@ -350,10 +467,10 @@ router.get('/', hasPermissions, function(req, res, next) {
 	});
 });
 
-// Admin Settings
+// GET - Admin Settings page
 router.get('/settings', hasPermissions, function(req, res, next) {
-	if (res.locals.account_type === 'view') {
-		res.render('user_settings', {
+	if (res.locals.user.account_type === 'view') {
+		res.render('view-settings', {
 			title: 'Settings'
 		});
 	}
@@ -368,25 +485,27 @@ router.get('/settings', hasPermissions, function(req, res, next) {
 	}
 });
 
-// User Settings
+// GET - User Settings page
 router.get('/userSettings', isUser, function(req, res, next) {
 	res.render('user-settings', {
 		title: 'Settings'
 	});
 });
 
+// POST - User edits their settings
 router.post('/userSettings', isUser, function(req, res, next) {
 	var username = res.locals.user.username;
+	// Do some validation
 	if (typeof req.body.data === 'object' && !Array.isArray(req.body.data)) {
 		var data = req.body.data;
 	}
 	else {
 		return res.status(400).send();
 	}
-	
+	selfSettingsEdit(data, res);
 });
 
-// Returns all possible marker icons
+// GET - All possible marker icons
 router.get('/settings/icons', isAdmin, function(req, res, next) {
 	fs.readdir(process.cwd() + '/public/images/markers', function (err, files) {
 		if (err) {
@@ -404,7 +523,7 @@ router.get('/settings/icons', isAdmin, function(req, res, next) {
 	});
 });
 
-// Edit settings/user/create new users
+// POST - Edit settings/user/create new users
 router.post('/settings', hasPermissions, function (req, res, next) {
 	var username;
 	var type;
@@ -421,23 +540,31 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 	if (res.locals.user.account_type === 'view' && type !== 'self-edit') {
 		return res.status(403).send();
 	}
-	var adminUsername = res.locals.user.username;
+	var adminUsername = res.locals.user.admin || res.locals.user.username
 	if (typeof req.body.data === 'object' && !Array.isArray(req.body.data)) {
 		data = req.body.data;
 		if (!username && typeof data.username === 'string') {
-			username = data.username.trim().replace(/[<()>"']/g, '*').toLowerCase();
+			data.username = data.username.trim().replace(/[<()>"']/g, '*').toLowerCase();
+			username = data.username;
 		}
+	}
+	if (!username) {
+		username = res.locals.user.username;
 	}
 	console.log("Type: " + type);
 	console.log("Username: " + username);
 	console.log("Admin: " + adminUsername);
-	if (username === adminUsername) {
-		console.log("username equal");
+	if (username === adminUsername && type !== 'self-edit') {
+		console.log("admin username equal");
 		return res.status(400).send();
 	}
 	if (typeof username === 'string') {
 		if (type === 'edit' || type === 'delete' || type === 'create' || type === 'reset' || type === 'self-edit') {
-			if (type === 'create') {
+			if (type === 'self-edit') {
+				console.log('in self-edit');
+				selfSettingsEdit(data, res);
+			}
+			else if (type === 'create') {
 				console.log("in create");
 				// Make sure we have data object
 				if (!data) {
@@ -448,33 +575,32 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 					typeof data.icon !== 'string') {
 						return res.status(400).send();
 					}
-				var newData;
 				if (data.account_type === 'user') {
-					newData = filterProps(data, [VALID_USER_NEW_PROPS, VALID_SUBPROPS]);
+					data = filterProps(data, [VALID_USER_NEW_PROPS, VALID_SUBPROPS]);
 				}
 				else if (data.account_type === 'view') {
-					newData = filterProps(data, VALID_VIEW_NEW_PROPS);
+					data = filterProps(data, VALID_VIEW_NEW_PROPS);
 				}
 				else {
 					return res.status(400).send();
 				}
-				checkIfTaken(newData.username, newData.email, function (err, result) {
+				checkIfTaken(data.username, data.email, function (err, result) {
 					if (err) { return res.status(500).send(); }
 					if (result) {
 						res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
 						console.log(result);
 						return res.end(JSON.stringify({error: result})); 
 					}
-					if (newData.firstName === '') {
-						newData.firstName = newData.username;
+					if (data.firstName === '') {
+						data.firstName = data.username;
 					}
-					newData.created_at = moment().utc().toString();
-					newData.admin = adminUsername;
-					DB.collection('users').insertOne(newData, function (err) {
+					data.created_at = moment().utc().toString();
+					data.admin = adminUsername;
+					DB.collection('users').insertOne(data, function (err) {
 						if (err) { return res.status(500).send(); }
-						sendPassword(newData, true, function (err, result) {
+						sendPassword(data, true, function (err, result) {
 							if (err) {
-								DB.collection('users').remove({ username: newData.username }, 1, function (err) {
+								DB.collection('users').remove({ username: data.username }, 1, function (err) {
 									return res.status(500).send();
 								});
 							}
@@ -512,20 +638,19 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 								res.status(400).send();
 							}
 							// Get only the props we need out of the data submitted
-							var newData;
 							if (result.account_type === 'user') {
-								newData = filterProps(data, [VALID_ADMIN_USER_EDIT_PROPS, VALID_SUBPROPS]);
+								data = filterProps(data, [VALID_ADMIN_USER_EDIT_PROPS, VALID_SUBPROPS]);
 							}
 							else if (result.account_type === 'view') {
-								newData = filterProps(data, VALID_ADMIN_VIEW_EDIT_PROPS);
+								data = filterProps(data, VALID_ADMIN_VIEW_EDIT_PROPS);
 							}
 							else {
 								return res.status(500).send();
 							}
-							DB.collection('users').updateOne({ username: username}, { $set : newData }, function (err, result) {
+							DB.collection('users').updateOne({ username: username}, { $set : data }, function (err, result) {
 								if (err) { return res.status(500).send(); }
 								else {
-									var newName = newData.firstName + " " + newData.lastName;
+									var newName = data.firstName + " " + data.lastName;
 									DB.collection(adminUsername + '_checkins').updateMany({ username: username }
 									, { $set: { name : newName }}, function (err, result) {
 										if (err) { return res.status(500).send(); }
@@ -534,7 +659,7 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 								}
 							});
 						}
-						else if (type === 'reset') {
+						else {
 							console.log('in reset');
 							sendPassword(result, false, function (err, sent) {
 								if (err) { return res.status(500).send(); }
@@ -542,10 +667,6 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 								else { return res.status(500).send(); }
 							});
 							
-						}
-						else {
-							console.log('in self-edit');
-							res.status(200).send();
 						}
 					}
 					else {
@@ -563,7 +684,7 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 	}
 });
 
-// Return current time formatted to timezone
+// GET - Return current time formatted to timezone
 router.get('/time', hasPermissions, function(req, res, next) {
 	var timezone = req.query.tz
 	var currentTime = momentTZ.tz(moment(), timezone).format("dddd, MMMM Do YYYY, h:mm:ss a");
@@ -571,7 +692,7 @@ router.get('/time', hasPermissions, function(req, res, next) {
 	res.end(currentTime);
 });
 
-// History page
+// GET - History page
 router.get('/history', hasPermissions, function(req, res, next) {
 	res.render('history', {
 		title: 'History',
@@ -579,12 +700,14 @@ router.get('/history', hasPermissions, function(req, res, next) {
 	});
 });
 
-// History Query
+// POST - History Query
 router.post('/history', hasPermissions, function(req, res, next) {
 	var name = req.body.name.toLowerCase();
 	var timezone = req.body.tz;
 	var num = parseInt(req.body.num);
-	getCheckInLatLng(name, DEFAULT_ICON, num, timezone, res.locals.user.username, function(err, results) {
+	var userAdmin = res.locals.user.admin || res.locals.user.username
+	var group = res.locals.user.group;
+	getCheckInLatLng(name, DEFAULT_ICON, num, timezone, userAdmin, group, function(err, results) {
 		if (err) { return res.status(500).send(); }
 		var coordinates = {};
 		coordinates[name] = results;
@@ -593,12 +716,19 @@ router.post('/history', hasPermissions, function(req, res, next) {
 	});
 });
 
-// Return a JSON object with latest info from each tech
+// GET - Return a JSON object with latest info from each tech
 router.get('/updateTechs', hasPermissions, function(req, res, next) {
 	var timezone = req.query.tz;
 	var techArray = [];
-	var currentMoment = moment();
-	DB.collection('users').find( { admin: res.locals.user.username }, { _id: 0, username: 1 }).toArray(function (err, results) {
+	var userAdmin = res.locals.user.admin || res.locals.user.username
+	var group = res.locals.user.group;
+	var query = {
+		admin: userAdmin
+	}
+	if (group !== undefined || group !== '') {
+		query.group = group;
+	}
+	DB.collection('users').find(query, { _id: 0, username: 1 }).toArray(function (err, results) {
 		if (err) { return res.status(500).send(); }
 		if (results.length === 0 ) {
 			var html = "<p id='no-results'>You have no users, please add them on the settings page (Gear Icon above)!</p>";
@@ -607,10 +737,10 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 		}
 		var numTechs = results.length;
 		results.forEach(function(tech) {
-			getDocsFromTech(tech.username, res.locals.user.username, function(err, results) {
+			getDocsFromTech(tech.username, userAdmin, function(err, results) {
 				if (err) {return res.status(500).send();}
 				if (results !== undefined) {
-					results.timestamp = timeFunctions(results.timestamp, currentMoment, timezone);
+					results.timestamp = timeFunctions(results.timestamp, timezone);
 					techArray.push(results);
 					numTechs--;
 				}
@@ -638,11 +768,19 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 	});
 });
 
-// Returns a JSON object with an array of 5 lat and lng values for each tech
+// GET - Returns a JSON object with an array of 5 lat and lng values for each tech
 router.get('/updateMap', hasPermissions, function(req, res, next) {
 	var timezone = req.query.tz;
 	var coordinates = {};
-	DB.collection('users').find({ admin: res.locals.user.username }, { _id : 0, icon: 1, username: 1 })
+	var userAdmin = res.locals.user.admin || res.locals.user.username
+	var group = res.locals.user.group;
+	var query = {
+		admin: userAdmin
+	}
+	if (group !== undefined || group !== '') {
+		query.group = group;
+	}
+	DB.collection('users').find(query, { _id : 0, icon: 1, username: 1 })
 	.toArray(function (err, results) {
 		if (err) {return res.status(500).send();}
 		if (results.length === 0 ) {
@@ -650,7 +788,7 @@ router.get('/updateMap', hasPermissions, function(req, res, next) {
 		}
 		var numTechs = results.length;
 		results.forEach(function(tech) {
-			getCheckInLatLng(tech.username, tech.icon, 5, timezone, res.locals.user.username, function(err, results) {
+			getCheckInLatLng(tech.username, tech.icon, 5, timezone, userAdmin, group, function(err, results) {
 				if (err) { return res.status(500).send(); }
 				if (results !== undefined) {
 					coordinates[tech.username] = results;

@@ -1,4 +1,4 @@
-extends user-layout
+extends layout
 
 block content
 	#loader
@@ -23,13 +23,8 @@ block content
 					label.onoffswitch-label(for='myonoffswitch')
 						span.onoffswitch-inner
 						span.onoffswitch-switch
-				if user.account_type === 'user'
-					p.text-center Reminder Notifications
-					.onoffswitch.center-block
-						input#checkin-reminders.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked=user.reminders)
-						label.onoffswitch-label(for='myonoffswitch')
-							span.onoffswitch-inner
-							span.onoffswitch-switch
 			.form-group.well.col-lg-6.col-lg-offset-3.col-md-8.col-md-offset-2.col-sm-12
 				input.btn.btn-block.btn-success.center-block(name='save', type='submit', value='Save Changes')
+	script.
+		var accountType = !{JSON.stringify(user.account_type)}
 			

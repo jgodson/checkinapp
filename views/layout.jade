@@ -12,7 +12,10 @@ html
 		if title === 'Main' || title === 'History'
 			link(rel='stylesheet', href='/stylesheets/style-panels.css')
 		if title === 'Settings'
-			link(rel='stylesheet', href='/stylesheets/admin-settings.css')
+			if user.account_type === 'admin'
+				link(rel='stylesheet', href='/stylesheets/admin-settings.css')
+			if user.account_type === 'view'
+				link(rel='stylesheet', href='/stylesheets/user-settings.css')
 			link(rel='stylesheet', href='/stylesheets/loader.css')
 			link(rel='stylesheet', href='/stylesheets/on-off-switch.css')
 		link(rel='icon', sizes='128x128', href='/apple-touch-icon.png')
@@ -57,7 +60,10 @@ html
 	if title === 'History'
 		script(src='/javascripts/history.js')
 	if title === 'Settings'
-		script(src='/javascripts/admin-settings.js')
+		if user.account_type === 'admin'
+			script(src='/javascripts/admin-settings.js')
+		if user.account_type === 'view'
+			script(src='/javascripts/user-settings.js')
 	script.
 		$(function() {
 			$.stayInWebApp();

@@ -9,6 +9,7 @@ function showRequestStatus (text, hideLoader) {
 	text.search(/error/ig) !== -1 ? $notifier.css('color', 'red') : $notifier.css('color', 'white');
 	$notifierText.text(text);
 	$notifier.fadeIn();
+	clearTimeout(notifierTimeout);
 	notifierTimeout = setTimeout(function () {
 		$notifier.fadeOut();
 	}, 4000);
@@ -76,8 +77,8 @@ $(document).ready(function () {
 		// Event listener for clicking the Add User button
 		$(this).find('.btn-success').on('click', function () {
 			$modal = $('#new-user-modal');
-			var newUsername = $("input[name='new-username']").val().trim();
-			var newEmail = $("input[name='new-email']").val().trim();
+			var newUsername = $("input[name='new-username']").val().trim().toLowerCase();
+			var newEmail = $("input[name='new-email']").val().trim().toLowerCase();
 			if (newUsername === '') {
 				showRequestStatus("Error: Invalid username");
 				$('#username-feedback').removeClass('glyphicon-ok')
@@ -103,8 +104,8 @@ $(document).ready(function () {
 				lastName: $("input[name='new-last-name']").val().trim(),
 				email: newEmail,
 				userGroup: $("input[name='new-group']").val().trim(),
-				reminders: ('#checkin-reminders').prop('checked'),
-				notifications: ('#overdue').prop('checked'),
+				reminders: $('#checkin-reminders').prop('checked'),
+				notifications: $('#overdue').prop('checked'),
 				icon: $modal.find('.modal-icon').attr('src'),
 				emergencyContact: {
 					name: $("input[name='new-emergency_name']").val().trim(),
