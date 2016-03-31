@@ -363,8 +363,8 @@ function getCheckInLatLng (tech, icon, max, timezone, collection, group, callbac
 	var query = {
 		username: tech
 	}
-	if (group !== undefined || group !== '') {
-		query.group = group;
+	if (group !== undefined && group !== '') {
+		query.userGroup = group;
 	}
 	DB.collection( collection + "_checkins" ).find({ username: tech }, { _id: 0, name: 1, message: 1, timestamp: 1, location: 1 })
 	.sort({_id: -1}).limit( max ).toArray(function (err, results) {
@@ -706,7 +706,7 @@ router.post('/history', hasPermissions, function(req, res, next) {
 	var timezone = req.body.tz;
 	var num = parseInt(req.body.num);
 	var userAdmin = res.locals.user.admin || res.locals.user.username
-	var group = res.locals.user.group;
+	var group = res.locals.user.userGroup;
 	getCheckInLatLng(name, DEFAULT_ICON, num, timezone, userAdmin, group, function(err, results) {
 		if (err) { return res.status(500).send(); }
 		var coordinates = {};
@@ -721,13 +721,15 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 	var timezone = req.query.tz;
 	var techArray = [];
 	var userAdmin = res.locals.user.admin || res.locals.user.username
-	var group = res.locals.user.group;
+	var group = res.locals.user.userGroup;
 	var query = {
-		admin: userAdmin
+		admin: userAdmin,
+		account_type: 'user'
 	}
-	if (group !== undefined || group !== '') {
-		query.group = group;
+	if (group !== undefined && group !== '') {
+		query.userGroup = group;
 	}
+
 	DB.collection('users').find(query, { _id: 0, username: 1 }).toArray(function (err, results) {
 		if (err) { return res.status(500).send(); }
 		if (results.length === 0 ) {
@@ -773,12 +775,13 @@ router.get('/updateMap', hasPermissions, function(req, res, next) {
 	var timezone = req.query.tz;
 	var coordinates = {};
 	var userAdmin = res.locals.user.admin || res.locals.user.username
-	var group = res.locals.user.group;
+	var group = res.locals.user.userGroup;
 	var query = {
-		admin: userAdmin
+		admin: userAdmin,
+		account_type: 'user'
 	}
-	if (group !== undefined || group !== '') {
-		query.group = group;
+	if (group !== undefined && group !== '') {
+		query.userGroup = group;
 	}
 	DB.collection('users').find(query, { _id : 0, icon: 1, username: 1 })
 	.toArray(function (err, results) {

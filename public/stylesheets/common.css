@@ -63,24 +63,43 @@ html, body {
 
 .navbar-default .navbar-brand {
 	color: white;
-	max-width: 300px;
+	max-width: 225px;
 	overflow: hidden;
 }
 
-@media (min-width: 451px) {
+@media (min-width: 451px) and (max-width: 767px) {
 	.navbar-default .navbar-brand {
 		max-width: 360px;
 	}
 }
+
+@media (min-width: 500px) and (max-width: 767px) {
+	.navbar-default .navbar-brand {
+		max-width: 400px;
+	}
+}
+
+@media (min-width: 560px) and (max-width: 767px) {
+	.navbar-default .navbar-brand {
+		max-width: 460px;
+	}
+}
+
+@media (min-width: 650px) and (max-width: 767px) {
+	.navbar-default .navbar-brand {
+		max-width: 560px;
+	}
+}
+
 @media (min-width: 992px) {
 	.navbar-default .navbar-brand {
-		max-width: 580px;
+		max-width: 420px;
 	}
 }
 
 @media (min-width: 1200px) {
 	.navbar-default .navbar-brand {
-		max-width: 780px;
+		max-width: 620px;
 	}
 }
 

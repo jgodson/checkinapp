@@ -34,24 +34,5 @@ body {
 }
 
 .navbar-default .navbar-brand {
-	color: white;
-	max-width: 300px;
-	overflow: hidden;
-}
-
-@media (min-width: 451px) {
-	.navbar-default .navbar-brand {
-		max-width: 360px;
-	}
-}
-@media (min-width: 992px) {
-	.navbar-default .navbar-brand {
-		max-width: 580px;
-	}
-}
-
-@media (min-width: 1200px) {
-	.navbar-default .navbar-brand {
-		max-width: 780px;
-	}
+	max-width: 260px;
 }

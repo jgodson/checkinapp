@@ -121,7 +121,6 @@ $(document).ready(function () {
 				if (req.readyState === 4){
 					if (req.status === 201) {
 						var newUserResponse = JSON.parse(req.responseText);
-						console.log(newUserResponse);
 						$('#new-user-modal').modal('hide');
 						$("input[name='new-username']").val('');
 						$("input[name='new-email']").val('');
@@ -307,10 +306,12 @@ $(document).ready(function () {
 			userData[index].firstName = $modal.find('input[name=first-name]').val().replace(/[<()>"']/g, '*');
 			userData[index].lastName = $modal.find('input[name=last-name]').val().replace(/[<()>"']/g, '*');
 			userData[index].userGroup = $modal.find('input[name=group]').val().replace(/[<()>"']/g, '*');
-			userData[index].icon = $modal.find('.modal-icon').attr('src').replace(/[<()>"']/g, '*');
-			userData[index].emergencyContact.name = $modal.find('input[name=emergency_name]').val().replace(/[<()>"']/g, '*');
-			userData[index].emergencyContact.phone = $modal.find('input[name=emergency_phone]').val().replace(/[<()>"']/g, '*');
-			userData[index].emergencyContact.email = $modal.find('input[name=emergency_email]').val().replace(/[<()>"']/g, '*');
+			if (userData[index].account_type === 'user') {
+				userData[index].icon = $modal.find('.modal-icon').attr('src').replace(/[<()>"']/g, '*');
+				userData[index].emergencyContact.name = $modal.find('input[name=emergency_name]').val().replace(/[<()>"']/g, '*');
+				userData[index].emergencyContact.phone = $modal.find('input[name=emergency_phone]').val().replace(/[<()>"']/g, '*');
+				userData[index].emergencyContact.email = $modal.find('input[name=emergency_email]').val().replace(/[<()>"']/g, '*');
+			}
 			var $row = $('[title=' + username + ']').closest('tr');
 			$row.find('td:nth-child(2)').text(userData[index].firstName);
 			$row.find('td:nth-child(3)').text(userData[index].lastName);
