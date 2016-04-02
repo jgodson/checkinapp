@@ -702,6 +702,9 @@ router.get('/history', hasPermissions, function(req, res, next) {
 
 // POST - History Query
 router.post('/history', hasPermissions, function(req, res, next) {
+	if (res.locals.user.suspended) {
+		return res.status(401).send();
+	}
 	var name = req.body.name.toLowerCase();
 	var timezone = req.body.tz;
 	var num = parseInt(req.body.num);
@@ -718,6 +721,12 @@ router.post('/history', hasPermissions, function(req, res, next) {
 
 // GET - Return a JSON object with latest info from each tech
 router.get('/updateTechs', hasPermissions, function(req, res, next) {
+	if (res.locals.user.suspended) {
+		var html = "<p id='no-results'>This account has been suspended. After payment is received, your account"
+		+" will be re-activated.</p>";
+		res.writeHead(200, "OK", {"Content-Type":"text/html;charset=UTF-8"});
+		return res.end(html);
+	}
 	var timezone = req.query.tz;
 	var techArray = [];
 	var userAdmin = res.locals.user.admin || res.locals.user.username
@@ -772,6 +781,9 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 
 // GET - Returns a JSON object with an array of 5 lat and lng values for each tech
 router.get('/updateMap', hasPermissions, function(req, res, next) {
+	if (res.locals.user.suspended) {
+		return res.status(401).send();
+	}
 	var timezone = req.query.tz;
 	var coordinates = {};
 	var userAdmin = res.locals.user.admin || res.locals.user.username

@@ -13,8 +13,8 @@ function query() {
 				req.setRequestHeader("Content-type", "application/json");
 				req.onreadystatechange = function(){
 					if(req.readyState == 4){
-						var results = JSON.parse(req.responseText);
 						if (req.status === 200) {
+							var results = JSON.parse(req.responseText);
 							if (results[name].length !== 0) {
 								deleteMarkers();
 								addMarkers(results, true);
@@ -23,6 +23,9 @@ function query() {
 							else {
 								displayError('No results received.', $err, $btn);
 							}
+						}
+						else if (req.status === 401) {
+							displayError('Account Suspended', $err, $btn);
 						}
 						else {
 							displayError('Server Error', $err, $btn);

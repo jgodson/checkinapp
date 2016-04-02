@@ -26,6 +26,10 @@ function findIndexOfUsername(username) {
 }
 
 $(document).ready(function () {
+	if (suspended === true) {
+		showRequestStatus("Your account has been suspended");
+	}
+	
 	// Load icons for icon picker
 	var iconRequest = new XMLHttpRequest();
 	iconRequest.open("GET", "/app/settings/icons", true);
