@@ -3,13 +3,21 @@ const router = express.Router();
 const passport = require('passport');
 
 
-router.get('/login', function(req, res, next) {
+router.get('/login', function (req, res, next) {
 	if (!!req.user) {
 		if (req.user.account_type === 'admin' || req.user.account_type === 'view') {
 			return res.redirect('/app');
 		}
 	}
  	res.render('admin_login', { title: 'Admin Login' });
+});
+
+router.get('/signup', function( req, res, next) {
+	
+});
+
+router.post('/signup', function (req, res, next) {
+	
 });
 
 router.post('/login', passport.authenticate('local', {
@@ -19,7 +27,7 @@ router.post('/login', passport.authenticate('local', {
     })
 );
 
-router.get('/logout', function(req, res){
+router.get('/logout', function (req, res) {
     req.logOut();
 	req.session.destroy();
     res.redirect('/admins/login');

@@ -52,11 +52,6 @@ function updateMap() {
 
 function refresh() {
 	var $countdown = $('#notify p span');
-	timer = setTimeout(function () {
-		updateTechs();
-		updateMap();
-		updateTime();
-	}, 60000);
 	$('#notify').fadeIn();
 	var seconds = 60;
 	countdown = setInterval(function () {
@@ -69,6 +64,17 @@ function refresh() {
 			$('#notify').fadeOut();
 		}
 	}, 1000);
+	timer = setTimeout(function () {
+		updateTechs();
+		updateMap();
+		updateTime();
+		console.log('Update at: ' + Date());
+	}, 60000);
+}
+
+// Adjust height of techList
+function adjustTechList() {
+	$('#techList').css('max-height', window.innerHeight - 55);
 }
 
 window.onload = function () {
@@ -78,10 +84,23 @@ window.onload = function () {
 	setInterval(function () {
 		console.log("Triggered at: " + Date());
 		refresh();
-	}, (updates - 1) * 60000);
+	}, updates * 60000);
+}
+
+window.onresize = function () {
+	if (window.innerWidth > 640) {
+		adjustTechList();
+	}
+	else {
+		$('#techList').css('max-height', '55%');
+	}
 }
 
 $(document).ready(function() {
+	if (window.innerWidth > 640) {
+		adjustTechList();
+	}
+	
 	$(document).on('click', 'input[name=cancel]', function() {
 		clearTimeout(timer);
 		clearInterval(countdown);

@@ -141,7 +141,6 @@ function checkNotification (user, admin, callback) {
 							if (viewUsers !== undefined) {
 								viewUsers.forEach(function (viewUser) {
 									if (viewUser !== undefined) {
-										console.log(viewUser.username + " " + viewUser.notifications);
 										if (viewUser.notifications) {
 											massEmail.to = viewUser.email;
 											sendEmail(massEmail);
