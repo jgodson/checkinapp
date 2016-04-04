@@ -41,7 +41,7 @@ html
 		script(src='/javascripts/moment.js')
 		script(src='/javascripts/stayInWebApp.min.js')
 		if title === 'Main'
-			script(async defer src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY + "&callback=initMap")
+			script(src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY)
 			script(src='/javascripts/checkin-script.js')
 		if title === 'Settings'
 			script(src='/javascripts/user-settings.js')

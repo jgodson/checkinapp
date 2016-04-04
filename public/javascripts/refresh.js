@@ -14,6 +14,9 @@ function updateTime(){
 		if(req.readyState == 4){
 			if (req.status === 200) {
 				document.getElementById("currentTime").innerHTML = req.responseText;
+				clearInterval(countdown);
+				$('#notify').fadeOut();
+				$('#notify p span').text('60 seconds');
 			}
 		}
 	}
@@ -84,7 +87,6 @@ $(document).ready(function() {
 		clearInterval(countdown);
 		$('#notify').fadeOut();
 		$('#notify p span').text('60 seconds');
-		console.log("Interval and timeout cleared");
 	});
 	
 	$(document).on('click', '.panel-title', function() {

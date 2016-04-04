@@ -47,7 +47,6 @@ html
 							p.navbar-rightside.navbar-rightside-top Account Balance
 							p#account-balance.navbar-rightside(class=(user.currentBalance < 0 ? 'negative' : ''))
 								= "$ " + user.currentBalance.toFixed(2)
-						
 	script(src='/javascripts/moment.js')
 	script(src='/javascripts/moment-timezone-data-2020.js')
 	script(src='/javascripts/jquery.min.js')
@@ -55,7 +54,8 @@ html
 	script(src='/javascripts/stayInWebApp.min.js')
 	block content
 	if title === 'Main' || title === 'History'
-		script(src='/javascripts/mapscript.js')
+		script(async defer src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY + "&callback=initMap")
+		script(defer src='/javascripts/mapscript.js')
 	if title === 'Main'
 		script(src='/javascripts/refresh.js')
 	if title === 'History'

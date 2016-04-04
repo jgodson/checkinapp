@@ -37,3 +37,10 @@ body {
 	max-width: 250px;
 	margin: auto;
 }
+
+.navbar-button {
+    padding: 5px !important;
+    margin-left: 15px;
+	margin-right: 15px;
+    margin-top: 9px;
+}

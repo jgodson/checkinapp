@@ -179,6 +179,7 @@ function stopLocationWatch () {
 }
 
 $(document).ready( function () {
+	initMap();
 	$updateBtn = $("button[name='update']");
 	updateLocation();
 	

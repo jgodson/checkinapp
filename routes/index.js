@@ -61,7 +61,7 @@ function getUsersForAdmin (adminName, callback) {
 		if (err) { return callback(err); }
 		results.sort(function(a, b) {
 			if (a.username > b.username) {return 1;}
-			else {return -1;}
+			else { return -1; }
 		});
 		callback(null, results);
 	});
@@ -348,7 +348,6 @@ function sendEmail (email, subject, message, callback) {
 		else { callback(null, true); }
 	});
 }
-
 
 // Get the last (newest) document from given tech
 function getDocsFromTech (tech, collection, callback) {

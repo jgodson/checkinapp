@@ -78,6 +78,8 @@ $(document).ready(function () {
 			}
 		});
 		
+		// TODO Validate phone number as well. regex -> /\b\d{3}[- .]\d{3}[- .]\d{4}\b/
+		
 		// Event listener for clicking the Add User button
 		$(this).find('.btn-success').on('click', function () {
 			$modal = $('#new-user-modal');
