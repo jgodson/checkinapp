@@ -1,0 +1,81 @@
+doctype html
+html
+	head
+		meta(charset='utf-8')
+		meta(http-equiv='X-UA-Compatible', content='IE=edge')
+		meta(name='viewport', content='width=device-width, initial-scale=1')
+		meta(name="mobile-web-app-capable", content="yes")
+		meta(name="apple-mobile-web-app-capable", content="yes")
+		title= "Tech Check Ins Admin Sign Up"
+		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+		link(rel='stylesheet', href='/stylesheets/common.css')
+		link(rel='stylesheet', href='/stylesheets/admin-signup.css')
+		link(rel='icon', sizes='128x128', href='/apple-touch-icon.png')
+		link(rel='stylesheet', href='/stylesheets/loader.css')
+		link(rel='stylesheet', href='/stylesheets/on-off-switch.css')
+	body
+		nav.navbar.navbar-default.navbar-fixed-top
+			.container
+				.navbar-header
+					button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#navbar')
+						span.sr-only Toggle navigation
+						span.icon-bar
+						span.icon-bar
+						span.icon-bar
+					.navbar-brand Create Account
+				#navbar.collapse.navbar-collapse
+					ul.nav.navbar-nav.navbar-right
+						li
+							a.btn.btn-warning.navbar-button(href='/admins/login') Back to Sign In
+		#loader
+			.loader
+		#notify
+			p Content
+			input.btn.btn-primary.btn-sm(name='close', value='Close', type='button')
+		.col-xs-12.col-md-8.col-md-offset-2
+			p.centered-label Fill out the information below to sign up for an admin account. After signup, you will be able to add user accounts.
+			form.well
+				.form-group.has-feedback
+					label username
+					input.form-control(name='username', type='text', placeholder='Preferred username' required)
+					span#username-feedback.glyphicon.form-control-feedback
+				.form-group.has-feedback
+					label Email
+					input.form-control(name='email', type='email', placeholder='Your password will be sent here' required)
+					span#email-feedback.glyphicon.form-control-feedback
+				.form-group
+					label First Name
+					input.form-control(name='firstname', type='text' required)
+				.form-group
+					label Last Name
+					input.form-control(name='lastname', type='text' required)
+				.form-group
+					label Company Name
+					input.form-control(name='companyname', type='text')
+				.form-group.has-feedback
+					label Phone Number (#-###-###-####)
+					input.form-control(name='phone', type='text' required)
+					span#phone-feedback.glyphicon.form-control-feedback
+				p.centered-label Check In Settings (Applies to all users (in minutes))
+				.form-group
+					label Check in Interval
+					input.form-control(name='interval', type='number', min='30', step='5', value='120' required)
+				.form-group
+					label Reminder Time (Before Check In)
+					input.form-control(name='reminder', type='number', min='5', step='5', value='10' required)
+				.form-group
+					label Overdue Alert Time (After missed Check In)
+					input.form-control(name='overdue', type='number', min='0', step='5', value='10' required)
+				.form-group
+					label Emergency Notification Time (After missed Check In)
+					input.form-control(name='emergency', type='number', min='0', step='5', value='30' required)
+				p.centered-label Notiy you (by email) when users are overdue?
+					.onoffswitch.center-block
+						input#overdue.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked='checked')
+						label.onoffswitch-label(for='myonoffswitch')
+							span.onoffswitch-inner
+							span.onoffswitch-switch
+				input.btn.btn-primary.btn-block.center-block(name='submit', type='submit', value='Create Acccount')
+	script(src='/javascripts/jquery.min.js')
+	script(src='/javascripts/bootstrap.min.js')
+	script(src='/javascripts/admin-signup.js')

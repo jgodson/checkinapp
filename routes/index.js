@@ -8,6 +8,8 @@ const DB = global.DB;
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt-nodejs');
+const filter = require('../filter.js');
+const passwordGen = require('../passwordGen.js');
 
 // Set up nodemailer
 const SMTP_CONFIG = {
@@ -100,65 +102,6 @@ function checkIfTaken (username, email, callback) {
 	});
 }
 
-// Filter unwanted properties out of an object given an array of valid properties
-function filterProps (dirtyObj, validPropArray, objNum) {
-	// Only works one object down eg. { prop1: 'prop', prop2: { objprop1: 'prop' } }
-	// @param dirtyObj - the object to filter
-	// @param validPropArray - array of valid properties for each object 
-	// eg. [ ["OriginalObjprop1", "OriginalObjprop2"], ["SubObjprop1", "SubObjprop2"], ... ]
-	if (!validPropArray) {
-		throw new Error('Must specifiy valid properties to check for');
-	}
-	if (!Array.isArray(validPropArray)) {
-		throw new TypeError('Invalid validPropArray paramater for Object number ' + objNum);
-	} 
-	if (typeof objNum === 'undefined') {
-		var objNum = 0;
-		if (Array.isArray(validPropArray[0])) {
-			var originalPropArray = validPropArray;
-			validPropArray = validPropArray[objNum];
-		}
-	}
-	// Do some validation
-	if (typeof dirtyObj !== 'object' && !Array.isArray(dirtyObj)) {
-		throw new TypeError('First paramater must be an object');
-	}
-	
-	// Do the filtering
-	var cleanObj = {};
-	Object.keys(dirtyObj).forEach(function (prop) {
-		validPropArray.forEach(function (validProp) {
-			if (prop === validProp) {
-				if (typeof dirtyObj[prop] === 'boolean' || typeof dirtyObj[prop] === 'number') {
-					cleanObj[prop] = dirtyObj[prop];
-				}
-				else if (typeof dirtyObj[prop] === 'string') {
-					// CHANGE REGEX HERE
-					cleanObj[prop] = dirtyObj[prop].trim().replace(/[<()>"']/g, '*');
-				}
-				else if (typeof dirtyObj[prop] === 'object') {
-					if (Array.isArray(dirtyObj[prop])) {
-						cleanObj[prop] = filterArray(dirtyObj[prop]);
-					}
-					else {
-						if (Array.isArray(originalPropArray[objNum + 1])) {
-							cleanObj[prop] = filterProps(dirtyObj[prop], originalPropArray[objNum + 1], ++objNum);
-						}
-						else {
-							throw new Error('If there are Objects within the first Object you must specifiy valid ' +
-							'properties for each object. eg. [ ["prop1", "prop2"], ["Obj2prop1", "Obj2prop2"], ... ].');
-						}
-					}
-				}
-				else {
-					console.log("Oops didn't match anything.....");
-				}
-			}
-		});
-	});
-	return cleanObj;
-}
-
 function selfSettingsEdit(data, res) {
 	var username = res.locals.user.username;
 	var passChange = false;
@@ -201,13 +144,13 @@ function selfSettingsEdit(data, res) {
 				return res.end(JSON.stringify({error: 'Incorrect old password'})); 
 			}
 			if (res.locals.user.account_type === 'user') {
-				data = filterProps(data, VALID_USER_EDIT_PROPS);
+				data = filter.filterProps(data, VALID_USER_EDIT_PROPS);
 			}
 			else if (res.locals.user.account_type === 'view') {
-				data = filterProps(data, VALID_VIEW_EDIT_PROPS);
+				data = filter.filterProps(data, VALID_VIEW_EDIT_PROPS);
 			}
 			else {
-				data = filterProps(data, VALID_ADMIN_EDIT_PROPS);
+				data = filter.filterProps(data, VALID_ADMIN_EDIT_PROPS);
 			}
 			bcrypt.hash(data.password, bcrypt.genSaltSync(), null, function(err, hash) {
 				if (err) { return res.status(500).send(); }
@@ -225,13 +168,13 @@ function selfSettingsEdit(data, res) {
 	else {
 		delete data.password;
 		if (res.locals.user.account_type === 'user') {
-			data = filterProps(data, VALID_USER_EDIT_PROPS);
+			data = filter.filterProps(data, VALID_USER_EDIT_PROPS);
 		}
 		else if (res.locals.user.account_type === 'view') {
-			data = filterProps(data, VALID_VIEW_EDIT_PROPS);
+			data = filter.filterProps(data, VALID_VIEW_EDIT_PROPS);
 		}
 		else {
-			data = filterProps(data, VALID_ADMIN_EDIT_PROPS);
+			data = filter.filterProps(data, VALID_ADMIN_EDIT_PROPS);
 		}
 		DB.collection('users').updateOne({ username: username }, { $set : data }, function (err) {
 			if (err) { return res.status(500).send(); }
@@ -240,46 +183,14 @@ function selfSettingsEdit(data, res) {
 	}
 }
 
-// Filter array string values with custom replacer regex
-function filterArray (array) {
-	for (var index = 0; index < array.length; index++) {
-		if (typeof array[index] === 'string') {
-			// CHANGE REGEX HERE
-			array[index] = array[index].trim().replace(/[<()>"']/g, '*');
-		}
-		else if (Array.isArray(array[index])) {
-			array[index] = filterArray(array[index]);
-		}
-		else {
-			array[index] = array[index];
-		}
-	}
-	return array;
-}
-
-// Generate a random password and return it
-function genPassword(desiredLength) {
-	var password = '';
-	var uppercase = false;
-	var chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-	'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-	'!', '@', '#', '$', '%', '&'];
-	while (password.length < desiredLength) {
-		uppercase = Math.floor(Math.random() * 10) < 4 ? true : false;
-		password += uppercase ? chars[Math.floor(Math.random() * 41)].toUpperCase() 
-			: chars[Math.floor(Math.random() * 41)];
-	}
-	return password;
-}
-
 // Send password reset email or new account info
 function sendPassword(user, isNew, callback) {
-	var newPassword = genPassword(12);
+	var newPassword = passwordGen.genPassword(12);
 	bcrypt.hash(newPassword, bcrypt.genSaltSync(), null, function(err, hash) {
-		if (err) { callback(err); }
+		if (err) { callback(err); return; }
 		DB.collection('users').updateOne({ username: user.username }, { $set : { password: hash } }
 		, function (err, result) {
-			if (err) { callback(err); }
+			if (err) { callback(err); return; }
 			if (user.account_type === 'user' || user.account_type === 'view') {
 				if (isNew) {
 					var mailOpts = {
@@ -329,7 +240,7 @@ function sendPassword(user, isNew, callback) {
 			// Send email with new password
 			transporter.sendMail(mailOpts, function (err, response) {
 				if (err) { callback(err, false); } 
-				else { console.log(response); callback(null, true); }
+				else { callback(null, true); }
 			});
 		});
 	});
@@ -575,10 +486,10 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 						return res.status(400).send();
 					}
 				if (data.account_type === 'user') {
-					data = filterProps(data, [VALID_USER_NEW_PROPS, VALID_SUBPROPS]);
+					data = filter.filterProps(data, [VALID_USER_NEW_PROPS, VALID_SUBPROPS]);
 				}
 				else if (data.account_type === 'view') {
-					data = filterProps(data, VALID_VIEW_NEW_PROPS);
+					data = filter.filterProps(data, VALID_VIEW_NEW_PROPS);
 				}
 				else {
 					return res.status(400).send();
@@ -638,10 +549,10 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 							}
 							// Get only the props we need out of the data submitted
 							if (result.account_type === 'user') {
-								data = filterProps(data, [VALID_ADMIN_USER_EDIT_PROPS, VALID_SUBPROPS]);
+								data = filter.filterProps(data, [VALID_ADMIN_USER_EDIT_PROPS, VALID_SUBPROPS]);
 							}
 							else if (result.account_type === 'view') {
-								data = filterProps(data, VALID_ADMIN_VIEW_EDIT_PROPS);
+								data = filter.filterProps(data, VALID_ADMIN_VIEW_EDIT_PROPS);
 							}
 							else {
 								return res.status(500).send();

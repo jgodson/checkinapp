@@ -120,6 +120,11 @@ connectToDB(URI, function (err){
 	DB.collection('users').find({ account_type: "admin" }).toArray(function (err, results) {
 		if (err) { emailOnError(err); throw err; }
 		// FOR EACH ADMIN DO THIS
+		if (results.length === 0) {
+			console.log('No Admins Found');
+			DB.close();
+			return;
+		}
 		admins = results.length;
 		results.forEach(function (result) {
 			console.log("Working on " + result.username);

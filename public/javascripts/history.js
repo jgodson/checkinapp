@@ -15,10 +15,15 @@ function query() {
 					if(req.readyState == 4){
 						if (req.status === 200) {
 							var results = JSON.parse(req.responseText);
-							if (results[name].length !== 0) {
-								deleteMarkers();
-								addMarkers(results, true);
-								$btn.prop('disabled', false);
+							if (results[name] !== undefined) {
+								if (results[name].length !== 0) {
+									deleteMarkers();
+									addMarkers(results, true);
+									$btn.prop('disabled', false);
+								}
+								else {
+									displayError('No results received.', $err, $btn);
+								}
 							}
 							else {
 								displayError('No results received.', $err, $btn);
@@ -57,5 +62,5 @@ $(document).ready(function() {
 	$('#query-button').click(function(e) {
 		e.preventDefault()
 		query();
-	})
+	});
 });
