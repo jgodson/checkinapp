@@ -178,6 +178,9 @@ $(document).ready(function () {
 									$('#email-feedback').removeClass('glyphicon-remove');
 									$('#email-feedback').addClass('glyphicon-ok');
 								}
+								else {
+									showRequestStatus('Error:' + response.error, true);
+								}
 							}
 						}
 						else {
