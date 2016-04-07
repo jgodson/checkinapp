@@ -116,7 +116,7 @@ router.post('/signup', function (req, res, next) {
 	if (data.requiredCheckIn % 5 !== 0 || data.overdueTime % 5 !== 0 || data.emergencyTime % 5 !== 0 
 		|| data.reminderTime % 5 !== 0) {
 			res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
-			return res.end(JSON.stringify({error: 'Times must be multiples of 5' })); 
+			return res.end(JSON.stringify({error: 'Times must be in multiples of 5' })); 
 	}
 	// Eliminate anything we don't need
 	data = filter.filterProps(data, VALID_NEW_ADMIN_PROPS);

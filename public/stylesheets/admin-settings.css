@@ -187,3 +187,34 @@ label {
 .negative {
 	color: red;
 }
+
+.panel {
+	background-color: gainsboro;
+}
+
+.panel-heading {
+	cursor: pointer;
+}
+
+.panel-heading:hover {
+	background-color: darkorange;
+}
+.panel-body {
+	display: none;
+}
+
+.centered-label {
+	text-align: center;
+	margin: 5px;
+	font-weight: bold;
+}
+
+caption {
+    font-size: large;
+    color: black;
+    font-weight: bold;
+}
+
+.hidden p {
+	visibility: hidden
+}

@@ -124,6 +124,7 @@ function checkNotification (user, admin, callback) {
 								+ (-(checkInInterval - timeDiff)) + " minutes overdue for check in!",
 							subject: subject
 						}
+						console.log(admin.overdueNotifications);
 						if (admin.overdueNotifications) {
 							massEmail.to = admin.email;
 							sendEmail(massEmail);
@@ -138,7 +139,7 @@ function checkNotification (user, admin, callback) {
 								sendEmail(emailError);
 								throw err;
 							}
-							if (viewUsers !== undefined) {
+							if (viewUsers.length !== 0) {
 								viewUsers.forEach(function (viewUser) {
 									if (viewUser !== undefined) {
 										if (viewUser.notifications) {
@@ -158,7 +159,7 @@ function checkNotification (user, admin, callback) {
 				else {
 					// Ensure they are only sent a message once
 					if (timeDiff < (checkInInterval + notifyEmergencyContact + runInterval)) {
-						if (user.emergencyContact.email) {
+						if (user.emergencyContact.email !== '') {
 							var mailOpts = {
 								to: user.emergencyContact.email,
 								subject: user.firstName + " " + user.lastName + ' is overdue for Check In',
@@ -169,7 +170,7 @@ function checkNotification (user, admin, callback) {
 							};
 							sendEmail(mailOpts);
 						}
-						if (user.emergencyContact.phone) {
+						if (user.emergencyContact.phone !== '') {
 							var phoneOpts = {
 								phone: user.emergencyContact.phone,
 								body: user.firstName + " " + user.lastName + " is overdue by " + (timeDiff - checkInInterval) 

@@ -81,3 +81,7 @@ function deleteMarkers() {
 		markerObj[tech] = [];
 	});
 }
+
+$(document).ready(function () {
+	initMap();
+});

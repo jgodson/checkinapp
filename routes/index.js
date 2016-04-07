@@ -32,9 +32,9 @@ const VALID_VIEW_NEW_PROPS = "username firstName lastName userGroup email accoun
 const VALID_SUBPROPS = "name phone email".split(' ');
 const VALID_USER_EDIT_PROPS = 'notifications reminders password'.split(' ');
 const VALID_VIEW_EDIT_PROPS = 'notifications password'.split(' ');
-const VALID_ADMIN_EDIT_PROPS = 'notifications password'.split(' ');
-const PASS_CHANGE_MESSAGE = 'Your password was recently changed. If this was not you, please ask your admin'
-	+ ' to reset your password immediately.';
+const VALID_ADMIN_EDIT_PROPS = 'overdueNotifications reminderTime overdueTime requiredCheckIn emergencyTime password'.split(' ');
+const PASS_CHANGE_MESSAGE = 'Your password was recently changed. If this was not you, please reset your'
+	+ ' password immediately.';
 
 // Takes the time from the document and returns an array with the changed document, the time difference in minutes,
 // and a nicely formatted string of the time difference
@@ -472,6 +472,18 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 		if (type === 'edit' || type === 'delete' || type === 'create' || type === 'reset' || type === 'self-edit') {
 			if (type === 'self-edit') {
 				console.log('in self-edit');
+				if (res.locals.user.account_type === 'admin') {
+					if (typeof data.requiredCheckIn !== 'number' || typeof data.overdueTime !== 'number' 
+						|| typeof data.reminderTime !== 'number' || typeof data.emergencyTime !== 'number') {
+							res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+							return res.end(JSON.stringify({error: 'Time values must be numbers' })); 
+						}
+					if (data.requiredCheckIn % 5 !== 0 || data.overdueTime % 5 !== 0 || data.emergencyTime % 5 !== 0 
+						|| data.reminderTime % 5 !== 0) {
+							res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+							return res.end(JSON.stringify({error: 'Time values must be in multiples of 5' })); 
+					}
+				}
 				selfSettingsEdit(data, res);
 			}
 			else if (type === 'create') {
@@ -680,9 +692,27 @@ router.get('/updateTechs', hasPermissions, function(req, res, next) {
 						if (a.name > b.name) {return 1;}
 						else {return -1;}
 					});
-					var html = jade.renderFile('./views/techList.jade', { techArray: techArray });
-					res.writeHead(200, "OK", {"Content-Type":"text/html;charset=UTF-8"});
-					res.end(html);
+					console.log(res.locals.user.account_type);
+					if (res.locals.user.account_type !== 'admin') {
+						DB.collection('users').findOne( {username : userAdmin}, function (err, admin) {
+							res.locals.user.reminderTime = admin.reminderTime;
+							res.locals.user.requiredCheckIn = admin.requiredCheckIn;
+							var html = jade.renderFile('./views/techList.jade', { 
+								techArray: techArray,
+								user: res.locals.user
+							 });
+							res.writeHead(200, "OK", {"Content-Type":"text/html;charset=UTF-8"});
+							res.end(html);
+						});
+					}
+					else {
+						var html = jade.renderFile('./views/techList.jade', { 
+							techArray: techArray,
+							user: res.locals.user
+						});
+						res.writeHead(200, "OK", {"Content-Type":"text/html;charset=UTF-8"});
+						res.end(html);
+					}
 				}
 			});
 		});

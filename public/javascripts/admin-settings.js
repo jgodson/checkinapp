@@ -26,6 +26,7 @@ function findIndexOfUsername(username) {
 }
 
 $(document).ready(function () {
+	// If account is suspended, let user know
 	if (suspended === true) {
 		showRequestStatus("Your account has been suspended");
 	}
@@ -78,7 +79,21 @@ $(document).ready(function () {
 			}
 		});
 		
-		// TODO Validate phone number as well. regex -> /\b\d{3}[- .]\d{3}[- .]\d{4}\b/
+		// Event listener for emergency phone
+		$("input[name='new-emergency_phone']").on('blur', function () {
+			var phone = $("input[name='new-emergency_phone']").val();
+			if (phone.search(/^\d{1}[- .]\d{3}[- .]\d{3}[- .]\d{4}$/) > -1
+				|| phone.search(/^\d{11}$/) > -1) {
+					phone = phone.replace(/[ -.]/g, '');
+					$('#new-emerg-phone-feedback').removeClass('glyphicon-remove')
+						.addClass('glyphicon-ok');
+					$("input[name='new-emergency_phone']").val(phone);
+			}
+			else {
+				$('#new-emerg-phone-feedback').removeClass('glyphicon-ok')
+					.addClass('glyphicon-remove');
+			}
+		});
 		
 		// Event listener for clicking the Add User button
 		$(this).find('.btn-success').on('click', function () {
@@ -184,6 +199,7 @@ $(document).ready(function () {
 		$(this).find('.select-icon').off('click');
 		$(this).find('.btn-success').off('click');
 		$("input[name='new-emergency_email']").off('blur');
+		$("input[name='new-emergency_phone']").off('blur');
 	});
 	
 	// Delete User
@@ -252,6 +268,15 @@ $(document).ready(function () {
 				$('#emerg-email-feedback').removeClass('glyphicon-remove')
 					.addClass('glyphicon-ok');
 			}
+			if (userData[index].emergencyContact.phone
+					.search(/^\d{11}$/) === -1) {
+				$('#emerg-phone-feedback').removeClass('glyphicon-ok')
+					.addClass('glyphicon-remove');
+			}
+			else {
+				$('#emerg-phone-feedback').removeClass('glyphicon-remove')
+					.addClass('glyphicon-ok');
+			}
 			$(this).find('.user-only').show();
 		}
 		else {
@@ -268,6 +293,22 @@ $(document).ready(function () {
 			else {
 				$('#emerg-email-feedback').removeClass('glyphicon-remove')
 					.addClass('glyphicon-ok');
+			}
+		});
+		
+		// Event listener for emergency phone
+		$("input[name='emergency_phone']").on('blur', function () {
+			var phone = $("input[name='emergency_phone']").val();
+			if (phone.search(/^\d{1}[- .]\d{3}[- .]\d{3}[- .]\d{4}$/) > -1
+				|| phone.search(/^\d{11}$/) > -1) {
+					phone = phone.replace(/[ -.]/g, '');
+					$('#new-emerg-phone-feedback').removeClass('glyphicon-remove')
+						.addClass('glyphicon-ok');
+					$("input[name='emergency_phone']").val(phone);
+			}
+			else {
+				$('#new-emerg-phone-feedback').removeClass('glyphicon-ok')
+					.addClass('glyphicon-remove');
 			}
 		});
 		
@@ -350,6 +391,7 @@ $(document).ready(function () {
 		$(this).find('.select-icon').off('click');
 		$(this).find('#reset-password').off('click');
 		$("input[name='emergency_email']").off('blur');
+		$("input[name='emergency_phone']").off('blur');
 	});
 	
 	// Close edit user modal when loaded if it has been set to be closed
@@ -377,5 +419,118 @@ $(document).ready(function () {
 		var toggleSwitch = $(this).find('input');
 		toggleSwitch.prop('checked') ? toggleSwitch.prop('checked', false) 
 			: toggleSwitch.prop('checked', true);
+	});
+	
+	//Admin Self Edit Settings Stuff
+	// Expand settings panel
+	$(document).on('click', '.panel-heading', function() {
+		$(this).parent().find('.panel-body').slideToggle('slow');
+	});
+	
+	$oldpass = $("input[name='old-password']");
+	$newpass = $("input[name='new-password']");
+	$confirmpass = $("input[name='new-password2']");
+	var passchange = false;
+	
+	// Save changes button event handler
+	$(document).on('click', 'input[name="save-edits"]', function(event) {
+		event.preventDefault();
+		if ($oldpass.val().trim() !== '' || $newpass.val().trim() !== '' || $confirmpass.val().trim() !== '') {
+			if ($oldpass.val().trim() === '') {
+				showRequestStatus('Error: Enter current password');
+				passchange = false;
+				return;
+			}
+			else if ($newpass.val().trim() === '') {
+				showRequestStatus('Error: Enter a new password');
+				passchange = false;
+				return;
+			}
+			else if ($confirmpass.val().trim() === '') {
+				showRequestStatus('Error: Confirm new password');
+				passchange = false;
+				return;
+			}
+			if ($newpass.val() !== $confirmpass.val()) {
+				showRequestStatus('Error: Passwords do not match');
+				passchange = false;
+				return;
+			}
+			if ($newpass.val().length < 8) {
+				showRequestStatus('Error: Password must be at least 8 characters');
+				passchange = false;
+				return;
+			}
+			else {
+				passchange = true;
+			}
+		}
+		var data = {};
+		if (passchange) {
+			data = {
+				oldpass: $oldpass.val().trim(),
+				password: $newpass.val().trim(),
+				confpass: $confirmpass.val().trim()	
+			};
+		}
+		data.overdueNotifications = $('#overdue').prop('checked');
+		data.requiredCheckIn = parseInt($("input[name='interval']").val());
+		data.reminderTime = parseInt($("input[name='reminder']").val());
+		data.overdueTime = parseInt($("input[name='overdue']").val());
+		data.emergencyTime = parseInt($("input[name='emergency']").val());
+		if (data.requiredCheckIn < 30) {
+			showRequestStatus("Error: Check In Interval is too short");
+			return;
+		}
+		if (data.reminderTime < 5) {
+			showRequestStatus("Error: Reminder Time is too short");
+			return;
+		}
+		if (!data.emergencyTime > 0 || !data.overdueTime > 0) {
+			showRequestStatus("Error: Emergency Time or Overdue Time missing");
+			return;
+		}
+		if (data.emergencyTime < data.overdueTime + 5) {
+			showRequestStatus("Error: Emergency Time is too short");
+			return;
+		}
+		if (data.requiredCheckIn % 5 !== 0 || data.overdueTime % 5 !== 0 
+		|| data.emergencyTime % 5 !== 0 || data.reminderTime % 5 !== 0) {
+				showRequestStatus('Error: Time values must be in multiples of 5');
+				return;
+		}
+		// Send data to server
+		$('#loader').fadeIn();
+			var req = new XMLHttpRequest();
+			req.open("POST","/app/settings", true);
+			req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			req.onreadystatechange = function () {
+				if (req.readyState === 4){
+					if (req.status === 200) { 
+						showRequestStatus('Changes saved!', true);
+						$oldpass.val('');
+						$newpass.val('');
+						$confirmpass.val('');
+					}
+					else if (req.status === 400) {
+						if (req.responseText) {
+							var response = JSON.parse(req.responseText);
+							if (response.error) {
+								showRequestStatus('Error: ' + response.error, true);	
+							}
+							else {
+								showRequestStatus('Error: Bad Request', true);
+							}
+						}
+						else {
+							showRequestStatus('Error: Bad Request', true);
+						}
+					}
+					else {
+						showRequestStatus('Error: Unknown Error', true);
+					}
+				}
+			}
+			req.send(JSON.stringify({ type: 'self-edit', data: data}));
 	});
 });

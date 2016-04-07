@@ -8,9 +8,11 @@ block content
 		input.btn.btn-primary.btn-sm(name='close', value='Close', type='button')
 	#pick-icon
 		#icon-images.col-xs-12.col-sm-8.col-sm-offset-2
-	#admin-settings
-		p Admin Settings Coming Soon!
-		// include admin-setings-admin.jade
+	.panel.panel-default.col-xs-12.col-md-10.col-md-offset-1
+		.panel-heading
+			h3.panel-title.centered-label Click here to change your settings
+		.panel-body
+			include admin-settings-admin.jade
 	#users
 		include admin-settings-user.jade
 	#new-user-modal.modal.fade(tab-index='-1', role='dialog')
@@ -70,11 +72,13 @@ block content
 								button.select-icon.btn.btn-primary.center-block Choose Icon
 					.form-group.well.user-only
 						p.text-center Emergency Contact Info
-						br
-						label Name
-						input.form-control(name='new-emergency_name', type='text')
-						label Phone Number
-						input.form-control(name='new-emergency_phone', type='text')
+						.form-group
+							label Name
+							input.form-control(name='new-emergency_name', type='text')
+						.form-group.has-feedback
+							label Phone Number (#-###-###-####)
+							input.form-control(name='new-emergency_phone', type='text')
+							span#new-emerg-phone-feedback.glyphicon.form-control-feedback
 						.form-group.has-feedback
 							label E-mail
 							input.form-control(name='new-emergency_email', type='email')
@@ -111,11 +115,13 @@ block content
 								button.select-icon.btn.btn-primary.center-block Choose Icon
 					.form-group.well.user-only
 						p.text-center Emergency Contact Info
-						br
-						label Name
-						input.form-control(name='emergency_name', type='text')
-						label Phone Number
-						input.form-control(name='emergency_phone', type='text')
+						.form-group
+							label Name
+							input.form-control(name='emergency_name', type='text')
+						.form-group.has-feedback
+							label Phone Number (#-###-###-####)
+							input.form-control(name='emergency_phone', type='text')
+							span#emerg-phone-feedback.glyphicon.form-control-feedback
 						.form-group.has-feedback
 							label E-mail
 							input.form-control(name='emergency_email', type='email')

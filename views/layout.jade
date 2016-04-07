@@ -54,8 +54,8 @@ html
 	script(src='/javascripts/stayInWebApp.min.js')
 	block content
 	if title === 'Main' || title === 'History'
-		script(async defer src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY + "&callback=initMap")
-		script(defer src='/javascripts/mapscript.js')
+		script(src="https://maps.googleapis.com/maps/api/js?key=" + MAPS_API_KEY)
+		script(src='/javascripts/mapscript.js')
 	if title === 'Main'
 		script(src='/javascripts/refresh.js')
 	if title === 'History'

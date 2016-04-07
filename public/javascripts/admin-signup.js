@@ -78,13 +78,13 @@ $(document).ready(function() {
 			showRequestStatus("Error: Emergency Time or Overdue Time missing");
 			return;
 		}
-		if (parseInt(emergencyTime) < parseInt(overdueTime)) {
+		if ((parseInt(emergencyTime) < parseInt(overdueTime) + 5)) {
 			showRequestStatus("Error: Emergency Time is too short");
 			return;
 		}
 		if (requiredCheckIn % 5 !== 0 || overdueTime % 5 !== 0 || emergencyTime % 5 !== 0 
 			|| reminderTime % 5 !== 0) {
-				showRequestStatus('Error: Times must be multiples of 5');
+				showRequestStatus('Error: Times must be in multiples of 5');
 				return;
 		}
 		var newUser = {
