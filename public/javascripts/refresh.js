@@ -65,7 +65,6 @@ function refresh() {
 		updateTechs();
 		updateMap();
 		updateTime();
-		console.log('Update at: ' + Date());
 	}, 60000);
 }
 
@@ -79,7 +78,6 @@ window.onload = function () {
 	updateTime();
 	updateMap();
 	setInterval(function () {
-		console.log("Triggered at: " + Date());
 		refresh();
 	}, updates * 60000);
 }

@@ -95,7 +95,6 @@ function submitCheckIn () {
 		type: document.getElementById('type').value.replace(/[<()>"']/g, '*'),
 		message: $message.value.trim().replace(/[<()>"']/g, '*')
 	}
-	console.log(checkin);
 	var req = new XMLHttpRequest();
 	req.open("POST","/app/checkin", true);
 	req.setRequestHeader("Content-type", "application/json");

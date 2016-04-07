@@ -61,7 +61,8 @@ $(document).ready(function() {
 		var reminderTime = $("input[name='reminder']").val();
 		var overdueTime = $("input[name='overdue']").val();
 		var emergencyTime = $("input[name='emergency']").val();
-		if (firstName === '' || lastName === '' || phone === '') {
+		// NEED TO ADD PHONE BACK IN, IF NEEDED
+		if (firstName === '' || lastName === '') {
 			showRequestStatus('Error: Missing required fields');
 			return;
 		}
@@ -99,7 +100,6 @@ $(document).ready(function() {
 			email: newEmail,
 			overdueNotifications: $('#overdue').prop('checked')
 		}
-		console.log(newUser);
 		$('#loader').fadeIn();
 		var req = new XMLHttpRequest();
 		req.open("POST","/admins/signup", true);
