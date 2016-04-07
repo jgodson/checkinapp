@@ -92,12 +92,12 @@ router.post('/signup', function (req, res, next) {
 	if (!data) {
 		return res.status(400).send();
 	}
-	// Make sure everything we need is there
+	// Make sure everything we need is there NEED TO ADD PHONE BACK IF NEEDED
 	if (!(typeof data.username !== 'string' || typeof data.email !== 'string' ||
 		typeof data.lastName !== 'string' || typeof data.firstName !== 'string' ||
-		typeof data.phone !== 'string' || typeof data.requiredCheckIn !== 'number' ||
-		typeof data.reminderTime !== 'number' || typeof data.overdueTime !== 'number' ||
-		typeof data.emergencyTime !== 'number' || data.overdueNotifications !== 'boolean')) {
+		typeof data.requiredCheckIn !== 'number' || typeof data.reminderTime !== 'number' ||
+		typeof data.overdueTime !== 'number' || typeof data.emergencyTime !== 'number' ||
+		typeof data.overdueNotifications !== 'boolean')) {
 			console.log('failed data check');
 			return res.status(400).send();
 	}
