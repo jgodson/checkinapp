@@ -1,0 +1,32 @@
+form
+	.form-group.well.col-lg-6.col-lg-offset-3.col-md-8.col-md-offset-2.col-sm-12
+		p.centered-label Change Password
+		label Old Password
+		input.form-control(name='old-password', type='password')
+		label New Password
+		input.form-control(name='new-password', type='password')
+		label Confirm New Password
+		input.form-control(name='new-password2', type='password')
+	.form-group.well.col-lg-6.col-lg-offset-3.col-md-8.col-md-offset-2.col-sm-12
+		p.centered-label Notiy you (by email) when users are overdue?
+		.onoffswitch.center-block
+			input#overdue.onoffswitch-checkbox(type='checkbox', name='onoffswitch' checked=user.overdueNotifications)
+			label.onoffswitch-label(for='myonoffswitch')
+				span.onoffswitch-inner
+				span.onoffswitch-switch
+	.well.col-lg-6.col-lg-offset-3.col-md-8.col-md-offset-2.col-sm-12
+		.centered-label Check In Settings (Applies to all users (in minutes))
+			.form-group
+				label Check in Interval
+				input.form-control(name='interval', type='number', min='30', step='5', value=user.requiredCheckIn required)
+			.form-group
+				label Reminder Time (Before Check In)
+				input.form-control(name='reminder', type='number', min='5', step='5', value=user.reminderTime required)
+			.form-group
+				label Overdue Alert Time (After missed Check In)
+				input.form-control(name='overdue', type='number', min='0', step='5', value=user.overdueTime required)
+			.form-group
+				label Emergency Notification Time (After missed Check In)
+				input.form-control(name='emergency', type='number', min='0', step='5', value=user.emergencyTime required)
+	.form-group.well.col-lg-6.col-lg-offset-3.col-md-8.col-md-offset-2.col-sm-12
+		input.btn.btn-block.btn-success.center-block(name='save-edits', type='submit', value='Save Changes')
