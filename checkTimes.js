@@ -290,6 +290,15 @@ connectToDB(URI, function (err) {
 					sendEmail(emailObj);
 					throw err;
 				}
+				if (users.length === 0) {
+					console.log("No users for " + admin.username);
+					doneAdmins++;
+					console.log("Finished " + doneAdmins + "/" + totalAdmins + " admins");
+					if (doneAdmins === totalAdmins) {
+						console.log("Finished");
+						DB.close();
+					}
+				}
 				totalUsersObj[admin.username] = users.length;
 				doneUsersObj[admin.username] = 0;
 				// LOOP THROUGH USERS FOR ADMIN

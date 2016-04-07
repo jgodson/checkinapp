@@ -179,7 +179,7 @@ $(document).ready(function () {
 									$('#email-feedback').addClass('glyphicon-ok');
 								}
 								else {
-									showRequestStatus('Error:' + response.error, true);
+									showRequestStatus('Error: ' + response.error, true);
 								}
 							}
 						}
