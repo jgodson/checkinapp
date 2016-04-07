@@ -82,7 +82,6 @@ function checkNotification (user, admin, callback) {
 		var reminderTime = admin.reminderTime;
 		var notifyEmergencyContact = admin.emergencyTime;
 		var overdueTime = admin.overdueTime;
-		var overdue = false;
 		if (previous.type === 'Check In' || previous.type === 'Start') {
 			var timeNow = moment();
 			var previousTime = moment(previous.timestamp, 'ddd, MMM Do YYYY, h:mm:ss a Z', 'en');
@@ -90,41 +89,45 @@ function checkNotification (user, admin, callback) {
 			console.log(previous.name + " last check in was " + timeDiff + " minutes ago");
 			if (timeDiff >= (checkInInterval - reminderTime)) {
 				var tech = previous.username;
+				var dontSend = false;
 				// Stop sending messages if it's been too long
 				if (timeDiff < (checkInInterval + notifyEmergencyContact)) {
-					if (timeDiff > checkInInterval) {
+					var overdueAlert = timeDiff >= (checkInInterval + overdueTime);
+					if (timeDiff > checkInInterval && user.reminders) {
 						var message = "You are " + (-(checkInInterval - timeDiff)) + " minutes overdue for Check In!";
 						var subject = "OVERDUE WARNING";
-						if (timeDiff > (checkInInterval + overdueTime)) {
-							overdue = true;
-						}
 					}
-					else {
+					else if (timeDiff < checkInInterval && user.notifications) {
 						var message = "You are due for a Check In in " + (checkInInterval - timeDiff) + " minutes";
 						var subject = "REMINDER NOTIFICATION"
 					}
-					var emailObj = {
-						to: user.email,
-						text: message,
-						subject: subject
+					else {
+						dontSend = true;
 					}
-					sendEmail(emailObj, function (err) {
-						if (err) { 
-							var emailError = {
-								to: process.env.ERROR_EMAIL,
-								subject: "Error sending email to " + user.email,
-								text: err
-							}
-							sendEmail(emailError);
+					if (!dontSend) {
+						var emailObj = {
+							to: user.email,
+							text: message,
+							subject: subject
 						}
-					});
-					if (overdue) {
+						sendEmail(emailObj, function (err) {
+							if (err) { 
+								var emailError = {
+									to: process.env.ERROR_EMAIL,
+									subject: "Error sending email to " + user.email,
+									text: err
+								}
+								sendEmail(emailError);
+							}
+						});
+					}
+					if (overdueAlert) {
 						var massEmail = {
 							text: user.firstName + " " + user.lastName + " (" + user.username + ") is " 
 								+ (-(checkInInterval - timeDiff)) + " minutes overdue for check in!",
 							subject: subject
 						}
-						console.log(admin.overdueNotifications);
+						console.log("Admin notifications? " + admin.overdueNotifications);
 						if (admin.overdueNotifications) {
 							massEmail.to = admin.email;
 							sendEmail(massEmail);
@@ -174,7 +177,7 @@ function checkNotification (user, admin, callback) {
 							var phoneOpts = {
 								phone: user.emergencyContact.phone,
 								body: user.firstName + " " + user.lastName + " is overdue by " + (timeDiff - checkInInterval) 
-									+ " minutes. Please ensure they are safe."
+									+ " minutes. Please ensure they are safe. You will only get this message once."
 							}
 							sendText(phoneOpts);
 						}

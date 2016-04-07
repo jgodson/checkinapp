@@ -14,9 +14,6 @@ function updateTime(){
 		if(req.readyState == 4){
 			if (req.status === 200) {
 				document.getElementById("currentTime").innerHTML = req.responseText;
-				clearInterval(countdown);
-				$('#notify').fadeOut();
-				$('#notify p span').text('60 seconds');
 			}
 		}
 	}

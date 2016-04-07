@@ -7,8 +7,7 @@ mixin techListing(techObj)
 					.icons
 						.glyphicon.glyphicon-map-marker.selected
 						.glyphicon(class=(techObj.timestamp[1] > user.requiredCheckIn ? 'glyphicon-alert' : 
-							techObj.timestamp[1] > (user.requiredCheckIn - user.reminderTime) 
-							? 'glyphicon-ok warning' : 'glyphicon-ok'))
+							techObj.timestamp[1] > user.requiredCheckIn - user.reminderTime ? 'glyphicon-ok warning' : 'glyphicon-ok'))
 				else
 					.icons
 						.glyphicon.glyphicon-map-marker.selected
