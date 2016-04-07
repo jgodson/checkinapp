@@ -405,6 +405,11 @@ router.get('/userSettings', isUser, function(req, res, next) {
 // POST - User edits their settings
 router.post('/userSettings', isUser, function(req, res, next) {
 	var username = res.locals.user.username;
+	// Don't allow any settings to be changed on demo account
+	if (username === 'user1' || username === 'user2' || username === 'user3') {
+		res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+		return res.end(JSON.stringify({error: 'Cannot modify demo accounts'})); 
+	}
 	// Do some validation
 	if (typeof req.body.data === 'object' && !Array.isArray(req.body.data)) {
 		var data = req.body.data;
@@ -451,6 +456,11 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 		return res.status(403).send();
 	}
 	var adminUsername = res.locals.user.admin || res.locals.user.username
+	// Don't allow any settings to be changed on demo account
+	if (adminUsername === 'demoaccount') {
+		res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+		return res.end(JSON.stringify({error: 'Cannot modify demo account'})); 
+	}
 	if (typeof req.body.data === 'object' && !Array.isArray(req.body.data)) {
 		data = req.body.data;
 		if (!username && typeof data.username === 'string') {
@@ -510,7 +520,6 @@ router.post('/settings', hasPermissions, function (req, res, next) {
 					if (err) { return res.status(500).send(); }
 					if (result) {
 						res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
-						console.log(result);
 						return res.end(JSON.stringify({error: result})); 
 					}
 					if (data.firstName === '') {

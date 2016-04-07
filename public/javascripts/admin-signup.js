@@ -48,13 +48,12 @@ $(document).ready(function() {
 			|| phone.search(/^\d{11}$/) > -1)) {
 				$('#phone-feedback').removeClass('glyphicon-remove glyphicon-ok');
 		}
-		else {
-			showRequestStatus("Error: Invalid phone number");
-			$('#phone-feedback').removeClass('glyphicon-ok')
-				.addClass('glyphicon-remove');
-			return;
-			
-		}
+		// else {
+		// 	showRequestStatus("Error: Invalid phone number");
+		// 	$('#phone-feedback').removeClass('glyphicon-ok')
+		// 		.addClass('glyphicon-remove');
+		// 	return;
+		// }
 		var firstName = $("input[name='firstname']").val().trim();
 		var lastName = $("input[name='lastname']").val().trim();
 		var companyName = $("input[name='companyname']").val().trim();

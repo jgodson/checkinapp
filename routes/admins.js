@@ -105,10 +105,10 @@ router.post('/signup', function (req, res, next) {
 		|| data.phone.search(/^\d{11}$/) > -1)) {
 			data.phone = data.phone.replace(/[ -.]/g, '');
 	}
-	else {
-		res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
-		return res.end(JSON.stringify({error: 'Invalid phone number'})); 
-	}
+	// else {
+	// 	res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
+	// 	return res.end(JSON.stringify({error: 'Invalid phone number'})); 
+	// }
 	if (data.email === '' || data.email.search(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$/i) === -1) {
 		res.writeHead(400, "Bad Request", { "Content-Type":"application/json;charset=UTF-8" } );
 		return res.end(JSON.stringify({error: {email: true } })); 
