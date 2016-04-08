@@ -26,18 +26,19 @@ html
 					ul.nav.navbar-nav.navbar-right
 						li
 							a.btn.btn-danger.navbar-button(href='/admins/login') Looking for the Admin Portal?
-		#loginWindow
-			#top
-				p Please log in to continue
-			#bottom
-				form(method='post', action='/users/login', enctype='multipart/formdata')
-					.form-group
-						label username
-						input.form-control(name='username', type='text')
-					.form-group
-						label password
-						input.form-control(name='password', type='password')
-					input.btn.btn-primary.btn-block(name='submit', type='submit', value='Login')
+		#loginContainer
+			#loginWindow
+				#top
+					p Please log in to continue
+				#bottom
+					form(method='post', action='/users/login', enctype='multipart/formdata')
+						.form-group
+							label username
+							input.form-control(name='username', type='text')
+						.form-group
+							label password
+							input.form-control(name='password', type='password')
+						input.btn.btn-primary.btn-block(name='submit', type='submit', value='Login')
 	script(src='/javascripts/jquery.min.js')
 	script(src='/javascripts/bootstrap.min.js')
 	
