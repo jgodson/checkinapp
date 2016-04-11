@@ -159,7 +159,7 @@ router.post('/login', passport.authenticate('local', {
 );
 
 router.get('/logout', function (req, res) {
-    req.logOut();
+	req.logOut();
 	req.session.destroy();
     res.redirect('/admins/login');
 });

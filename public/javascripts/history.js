@@ -1,3 +1,5 @@
+var timezone; // User's timezone (Guessed with moment-timezone.js)
+
 function query() {
 	var $err = $('#error');
 	var $btn = $('#query-button');
@@ -59,6 +61,7 @@ function displayError(message, $err, $btn) {
 }
 
 $(document).ready(function() {
+	timezone = moment.tz.guess() || "America/Edmonton";
 	$('#query-button').click(function(e) {
 		e.preventDefault()
 		query();
