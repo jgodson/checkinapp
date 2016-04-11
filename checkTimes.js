@@ -76,6 +76,7 @@ function getCheckInUsers (admin, callback) {
 function checkNotification (user, admin, callback) {
 	getLastCheckIn(user, admin, function (err, previous) {
 		if (previous === undefined) {
+			console.log("No Checkins for user");
 			return callback(null);
 		}
 		var checkInInterval = admin.requiredCheckIn;
@@ -88,23 +89,32 @@ function checkNotification (user, admin, callback) {
 			var timeDiff = timeNow.diff(previousTime, 'minutes'); // get time difference in mins
 			console.log(previous.name + " last check in was " + timeDiff + " minutes ago");
 			if (timeDiff >= (checkInInterval - reminderTime)) {
+				console.log("In Reminder/Overdue");
 				var tech = previous.username;
 				var dontSend = false;
 				// Stop sending messages if it's been too long
 				if (timeDiff < (checkInInterval + notifyEmergencyContact)) {
+					console.log("Checking if: " + timeDiff + " is less than " + (checkInInterval + notifyEmergencyContact));
 					var overdueAlert = timeDiff >= (checkInInterval + overdueTime);
+					console.log("Reminders are: " + (user.reminders ? 'ON' : 'OFF'));
+					console.log("Notifications are: " + (user.notifications ? 'ON' : 'OFF'));
+					console.log("Checking if: " + timeDiff + " > " + checkInInterval);
 					if (timeDiff > checkInInterval && user.reminders) {
+						console.log("OVERDUE REMINDER");
 						var message = "You are " + (-(checkInInterval - timeDiff)) + " minutes overdue for Check In!";
 						var subject = "OVERDUE WARNING";
 					}
 					else if (timeDiff < checkInInterval && user.notifications) {
+						console.log("NORMAL REMINDER");
 						var message = "You are due for a Check In in " + (checkInInterval - timeDiff) + " minutes";
 						var subject = "REMINDER NOTIFICATION"
 					}
 					else {
+						console.log("Setting dontSend to: true");
 						dontSend = true;
 					}
 					if (!dontSend) {
+						console.log("Sending REMINDER/OVERDUE Notification");
 						var emailObj = {
 							to: user.email,
 							text: message,
@@ -121,13 +131,14 @@ function checkNotification (user, admin, callback) {
 							}
 						});
 					}
+					console.log("OVERDUE ALERT (ADMIN/VIEW USERS): " + overdueAlert);
 					if (overdueAlert) {
 						var massEmail = {
 							text: user.firstName + " " + user.lastName + " (" + user.username + ") is " 
 								+ (-(checkInInterval - timeDiff)) + " minutes overdue for check in!",
 							subject: subject
 						}
-						console.log("Admin notifications? " + admin.overdueNotifications);
+						console.log("Admin notifications are " + (admin.overdueNotifications ? 'ON' : 'OFF'));
 						if (admin.overdueNotifications) {
 							massEmail.to = admin.email;
 							sendEmail(massEmail);
@@ -145,6 +156,7 @@ function checkNotification (user, admin, callback) {
 							if (viewUsers.length !== 0) {
 								viewUsers.forEach(function (viewUser) {
 									if (viewUser !== undefined) {
+										console.log(viewUser.username + " has notifications " + (viewUser.notifications ? 'ON' : 'OFF'));
 										if (viewUser.notifications) {
 											massEmail.to = viewUser.email;
 											sendEmail(massEmail);
@@ -161,8 +173,11 @@ function checkNotification (user, admin, callback) {
 				}
 				else {
 					// Ensure they are only sent a message once
+					console.log("Checking if: " + timeDiff + " is less than " + (checkInInterval + notifyEmergencyContact + runInterval));
 					if (timeDiff < (checkInInterval + notifyEmergencyContact + runInterval)) {
+						console.log("In Emergency Noticications");
 						if (user.emergencyContact.email !== '') {
+							console.log("Sending EMERG msg to " + user.emergencyContact.email);
 							var mailOpts = {
 								to: user.emergencyContact.email,
 								subject: user.firstName + " " + user.lastName + ' is overdue for Check In',
@@ -174,6 +189,7 @@ function checkNotification (user, admin, callback) {
 							sendEmail(mailOpts);
 						}
 						if (user.emergencyContact.phone !== '') {
+							console.log("Sending EMERG text to " + user.emergencyContact.phone);
 							var phoneOpts = {
 								phone: user.emergencyContact.phone,
 								body: user.firstName + " " + user.lastName + " is overdue by " + (timeDiff - checkInInterval) 
@@ -189,10 +205,13 @@ function checkNotification (user, admin, callback) {
 				}
 			}
 			else {
+				console.log(timeDiff + " not >= " + (checkInInterval - reminderTime));
+				console.log("NO ACTION TAKEN");
 				callback(null);
 			}
 		}
 		else {
+			console.log('Last checkin was END');
 			callback(null);
 		}
 	});
@@ -255,6 +274,7 @@ var doneUsersObj = {}; // Keep track of how many users done for each admin
 
 // CONNECT TO DB
 connectToDB(URI, function (err) {
+	console.log(Date());
 	if (err) {
 		var emailObj = {
 			to: process.env.ERROR_EMAIL,
@@ -278,7 +298,7 @@ connectToDB(URI, function (err) {
 		// LOOP THROUGH ADMINS
 		totalAdmins = results.length;
 		results.forEach(function (admin) {
-			console.log("Working on " + admin.username);
+			console.log("Working on admin " + admin.username);
 			// GET CHECKIN USERS FOR ADMINS
 			getCheckInUsers(admin, function (err, users) {
 				if (err) {
@@ -303,7 +323,7 @@ connectToDB(URI, function (err) {
 				doneUsersObj[admin.username] = 0;
 				// LOOP THROUGH USERS FOR ADMIN
 				users.forEach(function (user) {
-					console.log("Working on " + user.username);
+					console.log("Working on user " + user.username);
 					// CHECK NOTIFICATION FOR USER
 					checkNotification(user, admin, function (err) {
 						if (err) {

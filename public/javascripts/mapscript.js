@@ -1,7 +1,6 @@
-var map;
-var markerObj = {};
-var timezone = moment.tz.guess() || "America/Edmonton";
-var techArray = [];
+var map; // Google map object
+var markerObj = {}; // Object to place markers for techs in
+var techArray = []; // Array of all techs 
 
 // Initialize map (callback from loading scripts from google)
 function initMap() {

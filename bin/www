@@ -5,7 +5,7 @@ if (!process.env.MONGO_URI) {
 	require('../env.js');
 }
 
-// Make variables avaialbe to other functions
+// Make variables avaiable to other functions
 var server;
 var debug;
 var port;
