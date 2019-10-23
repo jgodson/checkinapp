@@ -9,7 +9,7 @@
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "~1.13.2",
     "connect-mongo": "^1.1.0",
-    "debug": "~2.2.0",
+    "debug": "~4.1.1",
     "express": "~4.13.1",
     "express-session": "^1.13.0",
     "jade": "~1.11.0",
